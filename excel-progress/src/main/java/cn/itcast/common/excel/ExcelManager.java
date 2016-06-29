@@ -307,6 +307,23 @@ public class ExcelManager {
 
 					// 创建第一列单元格并设置样式
 					Cell headerCell = row.createCell(0);
+					
+					// 设置批注
+					Drawing drawing = getDrawing(sheet) ;
+					Comment comment = null ;
+					// === 前四个参数是坐标点,后四个参数是编辑和显示批注时的大小.
+					if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+						comment = drawing.createCellComment(new HSSFClientAnchor((short) startFlag, (short) startFlag, (short) startFlag, (short) (cellHeaderNum - 1), (short)3, 3, (short)5, 6)) ;
+						comment.setString(new HSSFRichTextString(CommentType.EXCEL_HEADER.name()));
+					} else {
+						comment = drawing.createCellComment(new XSSFClientAnchor((short) startFlag, (short) startFlag, (short) startFlag, (short) (cellHeaderNum - 1), (short)3, 3, (short)5, 6)) ;
+						comment.setString(new XSSFRichTextString(CommentType.EXCEL_HEADER.name()));
+					}
+					
+					// 输入批注信息
+					comment.setAuthor("zhangtian@fengyuntec.com");
+				    //将批注添加到单元格对象中
+					headerCell.setCellComment(comment);
 					if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
 						headerCell.setCellValue(new HSSFRichTextString(headerTitle));
 					} else {
@@ -327,22 +344,6 @@ public class ExcelManager {
 					for (int i = 0; i < cellHeaderNum; i++) {
 						sheet.autoSizeColumn((short) i, true);
 					}
-					// 设置批注
-					Drawing drawing = getDrawing(sheet) ;
-					Comment comment = null ;
-					// === 前四个参数是坐标点,后四个参数是编辑和显示批注时的大小.
-					if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
-						comment = drawing.createCellComment(new HSSFClientAnchor((short) startFlag, (short) startFlag, (short) startFlag, (short) (cellHeaderNum - 1), (short)3, 3, (short)5, 6)) ;
-						comment.setString(new HSSFRichTextString(CommentType.EXCEL_HEADER.name()));
-					} else {
-						comment = drawing.createCellComment(new XSSFClientAnchor((short) startFlag, (short) startFlag, (short) startFlag, (short) (cellHeaderNum - 1), (short)3, 3, (short)5, 6)) ;
-						comment.setString(new XSSFRichTextString(CommentType.EXCEL_HEADER.name()));
-					}
-					
-					// 输入批注信息
-					comment.setAuthor("zhangtian@fengyuntec.com");
-				    //将批注添加到单元格对象中
-					headerCell.setCellComment(comment);
 				}
 			}
 		}
@@ -369,6 +370,24 @@ public class ExcelManager {
 
 					// 创建第一列单元格并设置样式
 					Cell warningCell = row.createCell(0);
+					
+					// 设置批注
+					Drawing drawing = getDrawing(sheet) ;
+					Comment comment = null ;
+					// === 前四个参数是坐标点,后四个参数是编辑和显示批注时的大小.
+					if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+						comment = drawing.createCellComment(new HSSFClientAnchor((short) startFlag, (short) startFlag, (short) startFlag, (short) (cellHeaderNum - 1), (short)3, 3, (short)5, 6)) ;
+						comment.setString(new HSSFRichTextString(CommentType.EXCEL_WARING.name()));
+					} else {
+						comment = drawing.createCellComment(new XSSFClientAnchor((short) startFlag, (short) startFlag, (short) startFlag, (short) (cellHeaderNum - 1), (short)3, 3, (short)5, 6)) ;
+						comment.setString(new XSSFRichTextString(CommentType.EXCEL_WARING.name()));
+					}
+					
+					// 输入批注信息
+					comment.setAuthor("zhangtian@fengyuntec.com");
+				    //将批注添加到单元格对象中
+					warningCell.setCellComment(comment);
+					
 					String warnResult = "" ;
 					for(String warning : warningInfo) {
 						warnResult += warning + "\r\n" ;
@@ -394,22 +413,6 @@ public class ExcelManager {
 					for (int i = 0; i < cellHeaderNum; i++) {
 						sheet.autoSizeColumn((short) i, true);
 					}
-					// 设置批注
-					Drawing drawing = getDrawing(sheet) ;
-					Comment comment = null ;
-					// === 前四个参数是坐标点,后四个参数是编辑和显示批注时的大小.
-					if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
-						comment = drawing.createCellComment(new HSSFClientAnchor((short) startFlag, (short) startFlag, (short) startFlag, (short) (cellHeaderNum - 1), (short)3, 3, (short)5, 6)) ;
-						comment.setString(new HSSFRichTextString(CommentType.EXCEL_WARING.name()));
-					} else {
-						comment = drawing.createCellComment(new XSSFClientAnchor((short) startFlag, (short) startFlag, (short) startFlag, (short) (cellHeaderNum - 1), (short)3, 3, (short)5, 6)) ;
-						comment.setString(new XSSFRichTextString(CommentType.EXCEL_WARING.name()));
-					}
-					
-					// 输入批注信息
-					comment.setAuthor("zhangtian@fengyuntec.com");
-				    //将批注添加到单元格对象中
-					warningCell.setCellComment(comment);
 				}
 			}
 		}

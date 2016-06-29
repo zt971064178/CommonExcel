@@ -143,6 +143,8 @@ public class ExcelUtils {
 		results.put("columnNames", list) ;
 		results.put("appDatas", appDatas) ;
 		results.put("sheetNames", sheetResult) ;
+		results.put("isBigData", false) ;
+		results.put("pageSize", 0) ;
 		if(ExcelType.XLS.equals(excelType)) {
 			return ExcelManager.createExcelManager().exportContainDataExcel_XLS(results, clazz) ;
 		} else {
