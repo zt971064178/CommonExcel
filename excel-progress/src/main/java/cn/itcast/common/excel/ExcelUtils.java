@@ -105,7 +105,7 @@ public class ExcelUtils {
 	 * @return
 	 * @author zhangtian
 	 */
-	public static Workbook exportExcelData(List<?> appDatas, Class<?> clazz, ExcelType excelType, String[] sheetNames) {
+	public static Workbook exportExcelData(List<?> appDatas, Class<?> clazz, ExcelType excelType, String sheetNames) {
 		
 		Map<String, Object> results = new HashMap<String, Object>() ;
 		Field[] fields = clazz.getDeclaredFields() ;
@@ -139,7 +139,7 @@ public class ExcelUtils {
 		}
 		
 		// 大批量数据条件下的分割Sheet
-		String[] sheetResult = sheetNames ;
+		String[] sheetResult = new String[] {sheetNames} ;
 		results.put("columnNames", list) ;
 		results.put("appDatas", appDatas) ;
 		results.put("sheetNames", sheetResult) ;
