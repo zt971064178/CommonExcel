@@ -51,7 +51,7 @@ public class ExcelTest {
 		}
 		
 		
-		Workbook workbook = ExcelUtils.exportExcelData(appDatas, BaseUser.class, ExcelType.XLS, true, 3000, new String[]{"test"}) ;
+		Workbook workbook = ExcelUtils.exportExcelData(appDatas, BaseUser.class, ExcelType.XLS, false, 3000) ;
 		OutputStream out = new FileOutputStream(new File("C:\\Users\\zhangtian\\Desktop\\demo.xls")) ;
 		workbook.write(out);
 		out.flush();
