@@ -1,15 +1,28 @@
 package cn.itcast.common.excel;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFClientAnchor;
+import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.hssf.usermodel.HSSFRichTextString;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
@@ -19,6 +32,7 @@ import org.apache.poi.ss.usermodel.Comment;
 import org.apache.poi.ss.usermodel.DataFormat;
 import org.apache.poi.ss.usermodel.Drawing;
 import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.RichTextString;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -26,11 +40,14 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import cn.itcast.common.excel.annotation.ExcelColumn;
 import cn.itcast.common.excel.constants.CommentType;
 import cn.itcast.common.excel.model.CellColumnValue;
+import cn.itcast.common.excel.utils.StringUtils;
+import cn.itcast.data.wash.excel.utils.ParseException;
 
 /**
  * 
@@ -771,5 +788,264 @@ public class ExcelManager {
 			// workbook.write(out);
 			// out.close();
 		}
-	
+		
+		// ======================================= Excel数据导入
+		// =======================================
+		/**
+		 *
+		 * importExcelData: Excel 模板严格按照生成的模板格式 获取列头信息 即获取了遍历的集合
+		 * 每行应该具有的数据列数，必须强制满足条件 即：导入的数据行 列数必须与列头数保持一致 需要解析数据中是否有错误标记位，有则全部去掉
+		 * 
+		 * @param filePath
+		 * @throws FileNotFoundException
+		 * @throws IOException
+		 * @throws ParseException
+		 * @throws IllegalAccessException
+		 * @throws InstantiationException
+		 * @throws NoSuchFieldException
+		 * @throws SecurityException
+		 */
+		public List<Object> importExcelData(String filePath, Class<?> clazz) throws FileNotFoundException, IOException, SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
+
+			POIFSFileSystem fs = new POIFSFileSystem(new FileInputStream(filePath));
+			workbook = getHSSFWorkbook(fs);
+
+			List<Object> list = new ArrayList<Object>() ;
+			Iterator<Sheet> it = workbook.sheetIterator();
+			while(it.hasNext()) {
+				list.addAll(importExcelData(clazz, it.next())) ;
+			}
+			return list ;
+		}
+		
+		/**
+		 * importExcelData2007:(Excel2007+文件解析特殊处理)
+		 * @return
+		 * @author zhangtian
+		 * @throws IOException 
+		 * @throws FileNotFoundException 
+		 * @throws IllegalAccessException 
+		 * @throws InstantiationException 
+		 * @throws NoSuchFieldException 
+		 * @throws SecurityException 
+		 */
+		public List<Object> importExcelData2007(InputStream in, Class<?> clazz, int sheetIndex) throws FileNotFoundException, IOException, SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
+			xssfWorkbook = getXSSFWorkbook(in) ;
+			XSSFSheet xssfSheet = xssfWorkbook.getSheetAt(sheetIndex) ;
+			return importExcelData(xssfSheet, clazz) ;
+		}
+
+		/**
+		 *
+		 * importExcelDate: Excel 模板严格按照生成的模板格式 获取列头信息 即获取了遍历的集合
+		 * 每行应该具有的数据列数，必须强制满足条件 即：导入的数据行 列数必须与列头数保持一致 需要解析数据中是否有错误标记位，有则全部去掉
+		 * 
+		 * @param in
+		 * @throws IOException
+		 * @throws ParseException
+		 * @throws IllegalAccessException
+		 * @throws InstantiationException
+		 * @throws NoSuchFieldException
+		 * @throws SecurityException
+		 */
+		public List<Object> importExcelData(InputStream in, Class<?> clazz) throws IOException,
+				SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
+
+			POIFSFileSystem fs = new POIFSFileSystem(in);
+			workbook = getHSSFWorkbook(fs);
+
+			HSSFSheet sheet = workbook.getSheetAt(0);
+			return importExcelData(sheet, clazz);
+		}
+
+		public List<Object> importExcelData(InputStream in, Class<?> clazz, String... sheetNames) throws IOException,
+				SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
+
+			POIFSFileSystem fs = new POIFSFileSystem(in);
+			workbook = getHSSFWorkbook(fs);
+
+			List<Object> objs = new ArrayList<Object>();
+			if (ArrayUtils.isEmpty(sheetNames)) {
+				return objs;
+			}
+			for (String sheetName : sheetNames) {
+				HSSFSheet sheet = workbook.getSheet(sheetName);
+				if (sheet == null) {
+					continue;
+				}
+				List<Object> obj = importExcelData(sheet, clazz);
+				objs.addAll(obj);
+
+			}
+			return objs;
+		}
+
+		/**
+		 *
+		 * importExcelData: Excel 模板严格按照生成的模板格式 获取列头信息 即获取了遍历的集合
+		 * 每行应该具有的数据列数，必须强制满足条件 即：导入的数据行 列数必须与列头数保持一致 需要解析数据中是否有错误标记位，有则全部去掉
+		 * 
+		 * @param file
+		 * @throws FileNotFoundException
+		 * @throws IOException
+		 * @throws ParseException
+		 * @throws IllegalAccessException
+		 * @throws InstantiationException
+		 * @throws NoSuchFieldException
+		 * @throws SecurityException
+		 */
+		public List<Object> importExcelData(File file, Class<?> clazz) throws FileNotFoundException, IOException,
+				SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
+
+			POIFSFileSystem fs = new POIFSFileSystem(new FileInputStream(file));
+			workbook = getHSSFWorkbook(fs);
+
+			HSSFSheet sheet = workbook.getSheetAt(0);
+			return importExcelData(sheet, clazz);
+		}
+		
+		
+		/*
+		 * Excel 模板严格按照生成的模板格式 获取列头信息 即获取了遍历的集合 每行应该具有的数据列数，必须强制满足条件 即：导入的数据行
+		 * 列数必须与列头数保持一致 需要解析数据中是否有错误标记位，有则全部去掉 需要过滤掉全空数据，即每列数据均为空
+		 * 根据sheet数组决定圈梁数据导入还是根据页签分批次导入
+		 */
+		// modified by zhangtian 实现类用接口抽象
+		private List<Object> importExcelData(Class<?> clazz, Sheet... sheets) throws IOException,
+				SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
+
+			// === 标记变量，消除全部的空行记录
+			StringBuilder sb = new StringBuilder();
+
+			// === 提取导入数据模板中的列头信息，即第三列的数据
+			Row headerCellRow = sheets[0].getRow(2);
+			Integer cellHeaderNum = Integer.valueOf(headerCellRow.getLastCellNum());
+			Map<String, String> columnMap = new HashMap<String, String>() ;
+			Comment comment = null ;
+
+			for (int m = 0; m < cellHeaderNum; m++) {
+				Cell headerCell = headerCellRow.getCell(m) ;
+				if(ObjectUtils.notEqual(headerCell.getCellComment(), null)) {
+					comment = headerCell.getCellComment() ;
+				} else {
+					throw new RuntimeException("列头批注丢失......") ;
+				}
+				
+				RichTextString columnNameE = comment.getString() ;
+				// === 循环遍历字节码注解 获取属性名称
+				Field[] fields = clazz.getDeclaredFields();
+				for (Field field : fields) {
+					if (field.isAnnotationPresent(ExcelColumn.class)) {
+						ExcelColumn excelColumn = field.getAnnotation(ExcelColumn.class);
+						String fieldName = field.getName();
+						if (StringUtils.equals(fieldName, columnNameE.getString())) {
+							columnMap.put(columnNameE.getString(), fieldName);
+						}
+					}
+				}
+			}
+
+			List<Object> rowList = new ArrayList<Object>();
+			Row dataRow = null ;
+			Cell dataCell = null;
+			for(Sheet sheet : sheets) {
+				// === 循环遍历数据
+				Integer rowNum = sheet.getLastRowNum();
+				for (int i = 3; i <= rowNum; i++) {
+					sb.delete(0, sb.length());
+					sb.append(String.valueOf(i));
+					dataRow = sheet.getRow(i);
+					if (dataRow != null) {
+						Object obj = clazz.newInstance();
+						for (int j = 0; j < cellHeaderNum; j++) {
+							dataCell = dataRow.getCell(j);
+							// =================================== 读取Excel文件中的数据
+							// 文本，数值或日期类型的条件判断 开始 =============================
+							if (dataCell != null) {
+								Object value = "";
+								switch (dataCell.getCellType()) {
+								case HSSFCell.CELL_TYPE_NUMERIC:
+									if (HSSFDateUtil.isCellDateFormatted(dataCell)) {
+										// === 如果是date类型则 ，获取该cell的date值
+										// value =
+										// HSSFDateUtil.getJavaDate(dataCell.getNumericCellValue()).toString();
+										Date date = dataCell.getDateCellValue();
+										// SimpleDateFormat sdf = new
+										// SimpleDateFormat("yyyy-MM-dd") ;
+										// value = sdf.format(date) ;
+										value = date;
+									} else {// === 纯数字
+										dataCell.setCellType(Cell.CELL_TYPE_STRING);
+										value = String.valueOf(dataCell.getRichStringCellValue().toString());
+									}
+									break;
+
+								case HSSFCell.CELL_TYPE_STRING:
+									value = dataCell.getRichStringCellValue().toString();
+									break;
+
+								case HSSFCell.CELL_TYPE_FORMULA:
+									// === 读公式计算值
+									value = String.valueOf(dataCell.getNumericCellValue());
+									// === 如果获取的数据值为非法值,则转换为获取字符串
+									if (value.equals("NaN")) {
+										value = dataCell.getRichStringCellValue().toString();
+									}
+									// cell.getCellFormula() ;//读公式
+									break;
+
+								case HSSFCell.CELL_TYPE_BOOLEAN:
+									value = dataCell.getBooleanCellValue();
+									break;
+
+								case HSSFCell.CELL_TYPE_BLANK:
+									value = "";
+									break;
+
+								case HSSFCell.CELL_TYPE_ERROR:
+									value = "";
+									break;
+
+								default:
+									value = dataCell.getRichStringCellValue().toString();
+									break;
+								}
+								sb.append(value);
+
+								// === 每一行数据的列头批注是否匹配，决定如何反射设置属性的值
+								String columnNameE = sheet.getRow(2).getCell(j).getCellComment().getString().getString() ;
+								String fieldName = columnMap.get(columnNameE);
+								Field f = obj.getClass().getDeclaredField(fieldName);
+								value = transValue(f, value);
+								f.setAccessible(true);
+								f.set(obj, value);
+							}
+							// =================================== 读取Excel文件中的数据
+							// 文本，数值或日期类型的条件判断 结束 =============================
+						}
+						if (StringUtils.trimToEmpty(sb.toString()).equals(String.valueOf(i))) {
+							Collections.emptyList();
+						} else {
+							rowList.add(obj);
+						}
+					}
+
+				}
+			}
+			
+			return rowList;
+		}
+		
+		private Object transValue(Field f,Object value){
+			Type type = f.getGenericType();
+			String typeName = type.toString();
+			if(StringUtils.equals("class java.lang.Integer", typeName)){
+				value = Integer.parseInt(value.toString());
+			}else if(StringUtils.equals("class java.util.Date", typeName)){
+				if(!(value instanceof Date)){
+					value = null;
+				}
+			}
+			return value;
+		}
 }
