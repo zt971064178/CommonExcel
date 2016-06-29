@@ -1,7 +1,6 @@
 package cn.itcast.common.excel.test;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -40,9 +39,20 @@ public class ExcelTest {
 		u3.setAddress("阳澄湖岛主");
 		
 		List<BaseUser> appDatas = new ArrayList<BaseUser>() ;
+		appDatas.add(u1) ;
+		appDatas.add(u2) ;
+		appDatas.add(u3) ;
+		for(int i = 0; i < 10000; i++) {
+			BaseUser u = new BaseUser() ;
+			u.setId(UUID.randomUUID().toString());
+			u.setUsername("Demo"+(i+1));
+			u.setAddress("阳澄湖岛主"+i);
+			appDatas.add(u) ;
+		}
 		
-		Workbook workbook = ExcelUtils.exportExcelData(appDatas, BaseUser.class, ExcelType.XLSX, false, 0) ;
-		OutputStream out = new FileOutputStream(new File("C:\\Users\\zhangtian\\Desktop\\demo.xlsx")) ;
+		
+		Workbook workbook = ExcelUtils.exportExcelData(appDatas, BaseUser.class, ExcelType.XLS, true, 3000, new String[]{"test"}) ;
+		OutputStream out = new FileOutputStream(new File("C:\\Users\\zhangtian\\Desktop\\demo.xls")) ;
 		workbook.write(out);
 		out.flush();
 		out.close(); 

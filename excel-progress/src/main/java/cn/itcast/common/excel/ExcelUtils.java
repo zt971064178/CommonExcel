@@ -32,7 +32,7 @@ public class ExcelUtils {
 	 * @return
 	 * @author zhangtian
 	 */
-	public static Workbook exportExcelData(List<?> appDatas, Class<?> clazz, ExcelType excelType, boolean isBigData, int pageSize) {
+	public static Workbook exportExcelData(List<?> appDatas, Class<?> clazz, ExcelType excelType, boolean isBigData, int pageSize, String[] sheetNames) {
 		
 		Map<String, Object> results = new HashMap<String, Object>() ;
 		Field[] fields = clazz.getDeclaredFields() ;
@@ -66,23 +66,25 @@ public class ExcelUtils {
 		}
 		
 		// 大批量数据条件下的分割Sheet
-		String[] sheetNames = null ; 
+		String[] sheetResult = null ; 
 		if(isBigData) {
 			int size = appDatas.size() ;
 			int sheetNums = size % pageSize == 0 ? size / pageSize : (size / pageSize +1) ;
-			sheetNames = new String[sheetNums] ;
+			sheetResult = new String[sheetNums] ;
 			if(sheetNums > 1) {
 				for(int i = 0; i< sheetNums; i++) {
-					sheetNames[i+1] = ExcelManager.DEFAULT_SHEET_NAME + (i+1) ;
+					sheetResult[i] = ExcelManager.DEFAULT_SHEET_NAME + (i+1) ;
 				}
 			}
 		} else {
-			sheetNames = new String[]{ExcelManager.DEFAULT_SHEET_NAME+1} ;
+			sheetResult = sheetNames ;
 		}
 		
 		results.put("columnNames", list) ;
 		results.put("appDatas", appDatas) ;
-		results.put("sheetNames", sheetNames) ;
+		results.put("sheetNames", sheetResult) ;
+		results.put("isBigData", isBigData) ;
+		results.put("pageSize", pageSize) ;
 		if(ExcelType.XLS.equals(excelType)) {
 			return ExcelManager.createExcelManager().exportContainDataExcel_XLS(results, clazz) ;
 		} else {

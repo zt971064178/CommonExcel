@@ -2,9 +2,12 @@ package cn.itcast.common.excel;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.codec.binary.StringUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.poi.hssf.usermodel.HSSFClientAnchor;
 import org.apache.poi.hssf.usermodel.HSSFRichTextString;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -24,6 +27,7 @@ import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import cn.itcast.common.excel.annotation.ExcelColumn;
 import cn.itcast.common.excel.constants.CommentType;
 import cn.itcast.common.excel.model.CellColumnValue;
 
@@ -462,6 +466,130 @@ public class ExcelManager {
 		}
 	}
 	
+	/*
+	 * 创建数据
+	 */
+	private void createAppRowHasData(int startFlag, List<Object> appData, Class<?> clazz, Integer cellHeaderNum,boolean isBigData, int pageSize, Sheet... sheets) {
+
+		Row row = null;
+		Cell cellAppDataCell = null;
+		ExcelColumn excelColumn = null;
+		if (cellHeaderNum != 0) {
+			if(CollectionUtils.isNotEmpty(appData)) {
+				if(isBigData) {
+					int totalSize = appData.size() ;
+					int start = 0 ;
+					pageSize = pageSize >= totalSize ? totalSize : pageSize ;
+					int end = pageSize ;
+					for(Sheet sheet : sheets) {
+						System.out.println(start+"===>"+end);
+						// === 行记录数
+						int k = 0 ;
+						for (int i = start; i < end; i++) {
+							// === 列记录数
+							row = sheet.createRow(k+startFlag);
+							k++;
+							Object o = appData.get(i);
+							Field[] fields = o.getClass().getDeclaredFields();
+							int j = 0;
+							for (Field field : fields) {
+								if (field.isAnnotationPresent(ExcelColumn.class)) {
+									field.setAccessible(true);
+									excelColumn = field.getAnnotation(ExcelColumn.class);
+									try {
+										cellAppDataCell = row.createCell(j);
+										if(StringUtils.equals(excelColumn.autoIncrement(), "Y")){
+											if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+												cellAppDataCell.setCellValue(new HSSFRichTextString((k+1)+""));
+											} else {
+												cellAppDataCell.setCellValue(new XSSFRichTextString((k+1)+""));
+											}
+										}else{
+											Object value = field.get(o);
+											if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+												if (value != null) {
+													cellAppDataCell.setCellValue(new HSSFRichTextString(
+															cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(value.toString())));
+												} else {
+													cellAppDataCell.setCellValue(new HSSFRichTextString(""));
+												}
+											} else {
+												if (value != null) {
+													cellAppDataCell.setCellValue(new XSSFRichTextString(
+															cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(value.toString())));
+												} else {
+													cellAppDataCell.setCellValue(new XSSFRichTextString(""));
+												}
+											}
+											
+										}
+										cellAppDataCell.setCellStyle(dataStyle);
+										j++;
+									} catch (Exception e) {
+										e.printStackTrace();
+									}
+								}
+							}
+						}
+						
+						start = start + pageSize ;
+						end = end + pageSize ;
+						if(end >= totalSize) {
+							end = totalSize ;
+						}
+					}
+				} else {
+					for(Sheet sheet : sheets) {
+						// === 行记录数
+						for (int i = 0; i < appData.size(); i++) {
+							// === 列记录数
+							row = sheet.createRow(i + startFlag);
+							Object o = appData.get(i);
+							Field[] fields = o.getClass().getDeclaredFields();
+							int j = 0;
+							for (Field field : fields) {
+								if (field.isAnnotationPresent(ExcelColumn.class)) {
+									field.setAccessible(true);
+									excelColumn = field.getAnnotation(ExcelColumn.class);
+									try {
+										cellAppDataCell = row.createCell(j);
+										if(StringUtils.equals(excelColumn.autoIncrement(), "Y")){
+											if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+												cellAppDataCell.setCellValue(new HSSFRichTextString((i+1)+""));
+											} else {
+												cellAppDataCell.setCellValue(new XSSFRichTextString((i+1)+""));
+											}
+										}else{
+											Object value = field.get(o);
+											if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+												if (value != null) {
+													cellAppDataCell.setCellValue(new HSSFRichTextString(
+															cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(value.toString())));
+												} else {
+													cellAppDataCell.setCellValue(new HSSFRichTextString(""));
+												}
+											} else {
+												if (value != null) {
+													cellAppDataCell.setCellValue(new XSSFRichTextString(
+															cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(value.toString())));
+												} else {
+													cellAppDataCell.setCellValue(new XSSFRichTextString(""));
+												}
+											}
+										}
+										cellAppDataCell.setCellStyle(dataStyle);
+										j++;
+									} catch (Exception e) {
+										e.printStackTrace();
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 	
 	// =========================================== 创建数据导入导出
 	// ===========================================
@@ -507,8 +635,9 @@ public class ExcelManager {
 			startFlag++ ;
 		}
 		// === 为空模板创建初始化数据 空数据样式
-		/*createAppRowHasData(sheet, (List<Object>) results.get("appDatas"), clazz,
-				((List<String>) results.get("columnNames")).size());*/
+		createAppRowHasData(startFlag, (List<Object>) results.get("appDatas"), clazz,
+				((List<String>) results.get("columnNames")).size(),(boolean)results.get("isBigData"), 
+				(int)results.get("pageSize"),sheets);
 		return workbook;
 		// ========================= 文件输出 ==========================
 		// FileOutputStream out = new FileOutputStream(filePath);
@@ -517,54 +646,55 @@ public class ExcelManager {
 	}
 	
 	// === 导出Excel的表格
-		@SuppressWarnings({ "unchecked"})
-		public Workbook exportContainDataExcel_XLSX(Map<String, Object> results, Class<?> clazz) {
-			// ======================== 页签创建 ==========================
-			// === 获取HSSFWorkbook对象
-			workbook = getXSSFWorkbook();
+	@SuppressWarnings({ "unchecked"})
+	public Workbook exportContainDataExcel_XLSX(Map<String, Object> results, Class<?> clazz) {
+		// ======================== 页签创建 ==========================
+		// === 获取HSSFWorkbook对象
+		workbook = getXSSFWorkbook();
 
-			String[] sheetNames = (String[]) results.get("sheetNames") ;
-			Sheet[] sheets = new Sheet[sheetNames.length] ;
-			for(int i = 0; i<sheetNames.length; i++) {
-				sheets[i] = workbook.createSheet(sheetNames[i]);
-			}
-			// ========================= 样式设置 =========================
-			// === 设置表头样式
-			setHeaderCellStyles(workbook);
-			// 设置警告信息样式
-			setWarnerCellStyles(workbook);
-			// === 设置列头样式
-			setTitleCellStyles(workbook);
-			// === 设置数据样式
-			setDataCellStyles(workbook);
-
-			// ========================= 数据创建 ==========================
-			// === 创建标题数据
-			int startFlag = 0 ;
-			if(results.get("headerName") != null) {
-				createAppRowHeaderData(results.get("headerName").toString(),startFlag,((List<String>) results.get("columnNames")).size(), sheets);
-				startFlag++ ;
-			}
-			
-			// 创建警告头信息
-			if(results.get("warningInfo") != null) {
-				createAppWaringData((String[])results.get("warningInfo"),startFlag, ((List<String>) results.get("columnNames")).size(),sheets) ;
-				startFlag++ ;
-			}
-			
-			// === 创建列头数据信息
-			if(results.get("columnNames") != null) {
-				createAppRowCellHeaderData(startFlag, (List<CellColumnValue>) results.get("columnNames"), clazz, sheets);
-				startFlag++ ;
-			}
-			// === 为空模板创建初始化数据 空数据样式
-			/*createAppRowHasData(sheet, (List<Object>) results.get("appDatas"), clazz,
-					((List<String>) results.get("columnNames")).size());*/
-			return workbook;
-			// ========================= 文件输出 ==========================
-			// FileOutputStream out = new FileOutputStream(filePath);
-			// workbook.write(out);
-			// out.close();
+		String[] sheetNames = (String[]) results.get("sheetNames") ;
+		Sheet[] sheets = new Sheet[sheetNames.length] ;
+		for(int i = 0; i<sheetNames.length; i++) {
+			sheets[i] = workbook.createSheet(sheetNames[i]);
 		}
+		// ========================= 样式设置 =========================
+		// === 设置表头样式
+		setHeaderCellStyles(workbook);
+		// 设置警告信息样式
+		setWarnerCellStyles(workbook);
+		// === 设置列头样式
+		setTitleCellStyles(workbook);
+		// === 设置数据样式
+		setDataCellStyles(workbook);
+
+		// ========================= 数据创建 ==========================
+		// === 创建标题数据
+		int startFlag = 0 ;
+		if(results.get("headerName") != null) {
+			createAppRowHeaderData(results.get("headerName").toString(),startFlag,((List<String>) results.get("columnNames")).size(), sheets);
+			startFlag++ ;
+		}
+		
+		// 创建警告头信息
+		if(results.get("warningInfo") != null) {
+			createAppWaringData((String[])results.get("warningInfo"),startFlag, ((List<String>) results.get("columnNames")).size(),sheets) ;
+			startFlag++ ;
+		}
+		
+		// === 创建列头数据信息
+		if(results.get("columnNames") != null) {
+			createAppRowCellHeaderData(startFlag, (List<CellColumnValue>) results.get("columnNames"), clazz, sheets);
+			startFlag++ ;
+		}
+		// === 为空模板创建初始化数据 空数据样式
+		createAppRowHasData(startFlag, (List<Object>) results.get("appDatas"), clazz,
+				((List<String>) results.get("columnNames")).size(),(boolean)results.get("isBigData"), 
+				(int)results.get("pageSize"),sheets);
+		return workbook;
+		// ========================= 文件输出 ==========================
+		// FileOutputStream out = new FileOutputStream(filePath);
+		// workbook.write(out);
+		// out.close();
+	}
 	
 }
