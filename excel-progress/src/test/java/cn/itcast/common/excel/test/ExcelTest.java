@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,6 +22,12 @@ import cn.itcast.common.excel.constants.ExcelType;
  */
 public class ExcelTest {
 	
+	/**
+	 * 导出Excel应对一定量大数据策略1
+	 * 分页签Sheet导出海量数据
+	 * 问题：workbook中的数据流无法在内存中被清除
+	 * 内存问题的该方法解决方案为：大数据时，分Excel导出，即导出多个超量数据Excel
+	 */
 	@Test
 	public void testExportExcel() throws Exception {
 		BaseUser u1 = new BaseUser() ;
@@ -42,7 +49,7 @@ public class ExcelTest {
 		appDatas.add(u1) ;
 		appDatas.add(u2) ;
 		appDatas.add(u3) ;
-		for(int i = 0; i < 10000; i++) {
+		for(int i = 0; i < 100; i++) {
 			BaseUser u = new BaseUser() ;
 			u.setId(UUID.randomUUID().toString());
 			u.setUsername("Demo"+(i+1));
@@ -50,12 +57,24 @@ public class ExcelTest {
 			appDatas.add(u) ;
 		}
 		
-		
-		Workbook workbook = ExcelUtils.exportExcelData(appDatas, BaseUser.class, ExcelType.XLSX, "demo") ;
+		long startTime = new Date().getTime() ;
+		Workbook workbook = ExcelUtils.exportExcelData(appDatas, BaseUser.class, ExcelType.OTHER, "zhangtian") ;
 		OutputStream out = new FileOutputStream(new File("C:\\Users\\zhangtian\\Desktop\\demo.xlsx")) ;
+		System.out.println(new Date().getTime() - startTime);
 		workbook.write(out);
 		out.flush();
 		out.close(); 
 		workbook.close();
 	}
+	
+	/**
+	 * 导出Excel应对一定量大数据策略2
+	 * 分页签Sheet导出海量数据
+	 * 导出数据后及时刷新内存
+	 */
+	@Test
+	public void testExportExcelBigData() {
+		
+	}
+	
 }

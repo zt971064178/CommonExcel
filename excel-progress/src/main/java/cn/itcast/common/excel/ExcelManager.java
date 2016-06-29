@@ -23,6 +23,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -80,6 +81,15 @@ public class ExcelManager {
 	
 	private XSSFWorkbook getXSSFWorkbook(InputStream in) throws IOException {
 		return new XSSFWorkbook(in);
+	}
+	
+	/*
+	 * 官方提到自POI3.8版本开始提供了一种SXSSF的方式，用于超大数据量的操作
+	 * SXSSF实现了一套自动刷入数据的机制。当数据数量达到一定程度时(用户可以自己设置这个限制)。
+	 * 像文本中刷入部分数据。这样就缓解了程序运行时候的压力。达到高效的目的
+	 */
+	private SXSSFWorkbook getSXSSFWorkbook() {
+		return new SXSSFWorkbook(getXSSFWorkbook(), 1000);
 	}
 	
 	/*
@@ -315,15 +325,18 @@ public class ExcelManager {
 					if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
 						comment = drawing.createCellComment(new HSSFClientAnchor((short) startFlag, (short) startFlag, (short) startFlag, (short) (cellHeaderNum - 1), (short)3, 3, (short)5, 6)) ;
 						comment.setString(new HSSFRichTextString(CommentType.EXCEL_HEADER.name()));
+					} else if(sheet.getWorkbook().getClass().isAssignableFrom(XSSFWorkbook.class)) {
+						comment = drawing.createCellComment(new XSSFClientAnchor((short) startFlag, (short) startFlag, (short) startFlag, (short) (cellHeaderNum - 1), (short)3, 4, (short)5, 6)) ;
+						comment.setString(new XSSFRichTextString(CommentType.EXCEL_HEADER.name()));
 					} else {
-						comment = drawing.createCellComment(new XSSFClientAnchor((short) startFlag, (short) startFlag, (short) startFlag, (short) (cellHeaderNum - 1), (short)3, 3, (short)5, 6)) ;
+						comment = drawing.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, (short) 0,row.getRowNum(), (short)  (cellHeaderNum - 1), row.getRowNum() + 1)) ;
 						comment.setString(new XSSFRichTextString(CommentType.EXCEL_HEADER.name()));
 					}
-					
 					// 输入批注信息
 					comment.setAuthor("zhangtian@fengyuntec.com");
 				    //将批注添加到单元格对象中
 					headerCell.setCellComment(comment);
+					
 					if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
 						headerCell.setCellValue(new HSSFRichTextString(headerTitle));
 					} else {
@@ -338,12 +351,13 @@ public class ExcelManager {
 					}
 					// === 合并头部单元格 参数：firstRow, lastRow, firstCol, lastCol
 					sheet.addMergedRegion(new CellRangeAddress((short) startFlag, (short) startFlag, (short) 0, (short) (cellHeaderNum - 1)));
+					
 					// === 设置单元格自动列宽，中文支持较好
 					// sheet.setColumnWidth(0, headerTitle.getBytes().length*2*256);
 					// 设置自动列宽
-					for (int i = 0; i < cellHeaderNum; i++) {
+					/*for (int i = 0; i < cellHeaderNum; i++) {
 						sheet.autoSizeColumn((short) i, true);
-					}
+					}*/
 				}
 			}
 		}
@@ -378,14 +392,17 @@ public class ExcelManager {
 					if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
 						comment = drawing.createCellComment(new HSSFClientAnchor((short) startFlag, (short) startFlag, (short) startFlag, (short) (cellHeaderNum - 1), (short)3, 3, (short)5, 6)) ;
 						comment.setString(new HSSFRichTextString(CommentType.EXCEL_WARING.name()));
-					} else {
+					} else if(sheet.getWorkbook().getClass().isAssignableFrom(XSSFWorkbook.class)) {
 						comment = drawing.createCellComment(new XSSFClientAnchor((short) startFlag, (short) startFlag, (short) startFlag, (short) (cellHeaderNum - 1), (short)3, 3, (short)5, 6)) ;
+						comment.setString(new XSSFRichTextString(CommentType.EXCEL_WARING.name()));
+					} else {
+						comment = drawing.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, (short) 0,row.getRowNum(), (short) (cellHeaderNum - 1), row.getRowNum() + 1)) ;
 						comment.setString(new XSSFRichTextString(CommentType.EXCEL_WARING.name()));
 					}
 					
 					// 输入批注信息
 					comment.setAuthor("zhangtian@fengyuntec.com");
-				    //将批注添加到单元格对象中
+				    // 将批注添加到单元格对象中
 					warningCell.setCellComment(comment);
 					
 					String warnResult = "" ;
@@ -410,9 +427,9 @@ public class ExcelManager {
 					// === 设置单元格自动列宽，中文支持较好
 					// sheet.setColumnWidth(0, headerTitle.getBytes().length*2*256);
 					// 设置自动列宽
-					for (int i = 0; i < cellHeaderNum; i++) {
+					/*for (int i = 0; i < cellHeaderNum; i++) {
 						sheet.autoSizeColumn((short) i, true);
-					}
+					}*/
 				}
 			}
 		}
@@ -452,8 +469,11 @@ public class ExcelManager {
 								if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
 									comment = drawing.createCellComment(new HSSFClientAnchor((short) startFlag, (short) startFlag, (short) startFlag, (short) i, (short)3, 3, (short)5, 6)) ;
 									comment.setString(new HSSFRichTextString(cellHeader.get(i).getColumnKey()));
-								} else {
+								} else if(sheet.getWorkbook().getClass().isAssignableFrom(XSSFWorkbook.class)) {
 									comment = drawing.createCellComment(new XSSFClientAnchor((short) startFlag, (short) startFlag, (short) startFlag, (short) i, (short)3, 3, (short)5, 6)) ;
+									comment.setString(new XSSFRichTextString(cellHeader.get(i).getColumnKey()));
+								} else {
+									comment = drawing.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, (short) i,row.getRowNum(), (short)  (i + 1), row.getRowNum() + 1)) ;
 									comment.setString(new XSSFRichTextString(cellHeader.get(i).getColumnKey()));
 								}
 								
@@ -699,5 +719,57 @@ public class ExcelManager {
 		// workbook.write(out);
 		// out.close();
 	}
+	
+	// === 导出Excel的表格
+		@SuppressWarnings({ "unchecked"})
+		public Workbook exportContainDataExcel_SXLSX(Map<String, Object> results, Class<?> clazz) {
+			// ======================== 页签创建 ==========================
+			// === 获取HSSFWorkbook对象
+			workbook = getSXSSFWorkbook();
+
+			String[] sheetNames = (String[]) results.get("sheetNames") ;
+			Sheet[] sheets = new Sheet[sheetNames.length] ;
+			for(int i = 0; i<sheetNames.length; i++) {
+				sheets[i] = workbook.createSheet(sheetNames[i]);
+			}
+			// ========================= 样式设置 =========================
+			// === 设置表头样式
+			setHeaderCellStyles(workbook);
+			// 设置警告信息样式
+			setWarnerCellStyles(workbook);
+			// === 设置列头样式
+			setTitleCellStyles(workbook);
+			// === 设置数据样式
+			setDataCellStyles(workbook);
+
+			// ========================= 数据创建 ==========================
+			// === 创建标题数据
+			int startFlag = 0 ;
+			if(results.get("headerName") != null) {
+				createAppRowHeaderData(results.get("headerName").toString(),startFlag,((List<String>) results.get("columnNames")).size(), sheets);
+				startFlag++ ;
+			}
+			
+			// 创建警告头信息
+			if(results.get("warningInfo") != null) {
+				createAppWaringData((String[])results.get("warningInfo"),startFlag, ((List<String>) results.get("columnNames")).size(),sheets) ;
+				startFlag++ ;
+			}
+			
+			// === 创建列头数据信息
+			if(results.get("columnNames") != null) {
+				createAppRowCellHeaderData(startFlag, (List<CellColumnValue>) results.get("columnNames"), clazz, sheets);
+				startFlag++ ;
+			}
+			// === 为空模板创建初始化数据 空数据样式
+			createAppRowHasData(startFlag, (List<Object>) results.get("appDatas"), clazz,
+					((List<String>) results.get("columnNames")).size(),(boolean)results.get("isBigData"), 
+					(int)results.get("pageSize"),sheets);
+			return workbook;
+			// ========================= 文件输出 ==========================
+			// FileOutputStream out = new FileOutputStream(filePath);
+			// workbook.write(out);
+			// out.close();
+		}
 	
 }

@@ -89,8 +89,10 @@ public class ExcelUtils {
 		results.put("pageSize", pageSize) ;
 		if(ExcelType.XLS.equals(excelType)) {
 			return ExcelManager.createExcelManager().exportContainDataExcel_XLS(results, clazz) ;
-		} else {
+		} else if(ExcelType.XLSX.equals(excelType)) {
 			return ExcelManager.createExcelManager().exportContainDataExcel_XLSX(results, clazz);
+		} else {
+			return ExcelManager.createExcelManager().exportContainDataExcel_SXLSX(results, clazz) ;
 		}
 	}
 	
@@ -147,8 +149,10 @@ public class ExcelUtils {
 		results.put("pageSize", 0) ;
 		if(ExcelType.XLS.equals(excelType)) {
 			return ExcelManager.createExcelManager().exportContainDataExcel_XLS(results, clazz) ;
-		} else {
+		} else if(ExcelType.XLSX.equals(excelType)) {
 			return ExcelManager.createExcelManager().exportContainDataExcel_XLSX(results, clazz);
+		} else {
+			return ExcelManager.createExcelManager().exportContainDataExcel_SXLSX(results, clazz) ;
 		}
 	}
 }
