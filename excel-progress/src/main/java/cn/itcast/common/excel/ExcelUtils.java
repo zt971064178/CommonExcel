@@ -92,6 +92,12 @@ public class ExcelUtils {
 		} else if(ExcelType.XLSX.equals(excelType)) {
 			return ExcelManager.createExcelManager().exportContainDataExcel_XLSX(results, clazz);
 		} else {
+			/*
+			 * 导出Excel应对一定量大数据策略2
+			 * 分页签Sheet导出海量数据
+			 * 导出数据后及时刷新内存
+			 * 
+			 */
 			return ExcelManager.createExcelManager().exportContainDataExcel_SXLSX(results, clazz) ;
 		}
 	}
@@ -152,6 +158,12 @@ public class ExcelUtils {
 		} else if(ExcelType.XLSX.equals(excelType)) {
 			return ExcelManager.createExcelManager().exportContainDataExcel_XLSX(results, clazz);
 		} else {
+			/*
+			 * 导出Excel应对一定量大数据策略2
+			 * 分页签Sheet导出海量数据
+			 * 导出数据后及时刷新内存
+			 * 
+			 */
 			return ExcelManager.createExcelManager().exportContainDataExcel_SXLSX(results, clazz) ;
 		}
 	}

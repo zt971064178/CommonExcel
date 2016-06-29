@@ -49,7 +49,7 @@ public class ExcelTest {
 		appDatas.add(u1) ;
 		appDatas.add(u2) ;
 		appDatas.add(u3) ;
-		for(int i = 0; i < 100; i++) {
+		for(int i = 0; i < 70000; i++) {
 			BaseUser u = new BaseUser() ;
 			u.setId(UUID.randomUUID().toString());
 			u.setUsername("Demo"+(i+1));
@@ -58,7 +58,7 @@ public class ExcelTest {
 		}
 		
 		long startTime = new Date().getTime() ;
-		Workbook workbook = ExcelUtils.exportExcelData(appDatas, BaseUser.class, ExcelType.OTHER, "zhangtian") ;
+		Workbook workbook = ExcelUtils.exportExcelData(appDatas, BaseUser.class, ExcelType.XLSX, true, 15000) ;
 		OutputStream out = new FileOutputStream(new File("C:\\Users\\zhangtian\\Desktop\\demo.xlsx")) ;
 		System.out.println(new Date().getTime() - startTime);
 		workbook.write(out);
