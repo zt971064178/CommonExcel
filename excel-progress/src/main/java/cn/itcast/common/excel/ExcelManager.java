@@ -1,8 +1,5 @@
 package cn.itcast.common.excel;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -11,18 +8,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFClientAnchor;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.hssf.usermodel.HSSFRichTextString;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
@@ -40,14 +34,12 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import cn.itcast.common.excel.annotation.ExcelColumn;
 import cn.itcast.common.excel.constants.CommentType;
 import cn.itcast.common.excel.model.CellColumnValue;
 import cn.itcast.common.excel.utils.StringUtils;
-import cn.itcast.data.wash.excel.utils.ParseException;
 
 /**
  * 
@@ -85,18 +77,22 @@ public class ExcelManager {
 		return new HSSFWorkbook();
 	}
 	
-	private HSSFWorkbook getHSSFWorkbook(POIFSFileSystem in) throws IOException {
+	protected HSSFWorkbook getHSSFWorkbook(POIFSFileSystem in) throws IOException {
 		return new HSSFWorkbook(in);
 	}
 	
 	/*
 	 * 获取XSSFWorkbook对象
 	 */
-	private XSSFWorkbook getXSSFWorkbook() {
+	protected XSSFWorkbook getXSSFWorkbook() {
 		return new XSSFWorkbook();
 	}
 	
-	private XSSFWorkbook getXSSFWorkbook(InputStream in) throws IOException {
+	protected XSSFWorkbook getXSSFWorkbook(String filePath) throws IOException {
+		return new XSSFWorkbook(filePath);
+	}
+	
+	protected XSSFWorkbook getXSSFWorkbook(InputStream in) throws IOException {
 		return new XSSFWorkbook(in);
 	}
 	
@@ -105,8 +101,16 @@ public class ExcelManager {
 	 * SXSSF实现了一套自动刷入数据的机制。当数据数量达到一定程度时(用户可以自己设置这个限制)。
 	 * 像文本中刷入部分数据。这样就缓解了程序运行时候的压力。达到高效的目的
 	 */
-	private SXSSFWorkbook getSXSSFWorkbook() {
+	protected SXSSFWorkbook getSXSSFWorkbook() {
 		return new SXSSFWorkbook(getXSSFWorkbook(), 1000);
+	}
+	
+	protected SXSSFWorkbook getSXSSFWorkbook(String filePath) throws IOException {
+		return new SXSSFWorkbook(getXSSFWorkbook(filePath), 1000);
+	}
+	
+	protected SXSSFWorkbook getSXSSFWorkbook(InputStream in) throws IOException {
+		return new SXSSFWorkbook(getXSSFWorkbook(in), 1000);
 	}
 	
 	/*
@@ -791,127 +795,13 @@ public class ExcelManager {
 		
 		// ======================================= Excel数据导入
 		// =======================================
-		/**
-		 *
-		 * importExcelData: Excel 模板严格按照生成的模板格式 获取列头信息 即获取了遍历的集合
-		 * 每行应该具有的数据列数，必须强制满足条件 即：导入的数据行 列数必须与列头数保持一致 需要解析数据中是否有错误标记位，有则全部去掉
-		 * 
-		 * @param filePath
-		 * @throws FileNotFoundException
-		 * @throws IOException
-		 * @throws ParseException
-		 * @throws IllegalAccessException
-		 * @throws InstantiationException
-		 * @throws NoSuchFieldException
-		 * @throws SecurityException
-		 */
-		public List<Object> importExcelData(String filePath, Class<?> clazz) throws FileNotFoundException, IOException, SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
-
-			POIFSFileSystem fs = new POIFSFileSystem(new FileInputStream(filePath));
-			workbook = getHSSFWorkbook(fs);
-
-			List<Object> list = new ArrayList<Object>() ;
-			Iterator<Sheet> it = workbook.sheetIterator();
-			while(it.hasNext()) {
-				list.addAll(importExcelData(clazz, it.next())) ;
-			}
-			return list ;
-		}
-		
-		/**
-		 * importExcelData2007:(Excel2007+文件解析特殊处理)
-		 * @return
-		 * @author zhangtian
-		 * @throws IOException 
-		 * @throws FileNotFoundException 
-		 * @throws IllegalAccessException 
-		 * @throws InstantiationException 
-		 * @throws NoSuchFieldException 
-		 * @throws SecurityException 
-		 */
-		public List<Object> importExcelData2007(InputStream in, Class<?> clazz, int sheetIndex) throws FileNotFoundException, IOException, SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
-			xssfWorkbook = getXSSFWorkbook(in) ;
-			XSSFSheet xssfSheet = xssfWorkbook.getSheetAt(sheetIndex) ;
-			return importExcelData(xssfSheet, clazz) ;
-		}
-
-		/**
-		 *
-		 * importExcelDate: Excel 模板严格按照生成的模板格式 获取列头信息 即获取了遍历的集合
-		 * 每行应该具有的数据列数，必须强制满足条件 即：导入的数据行 列数必须与列头数保持一致 需要解析数据中是否有错误标记位，有则全部去掉
-		 * 
-		 * @param in
-		 * @throws IOException
-		 * @throws ParseException
-		 * @throws IllegalAccessException
-		 * @throws InstantiationException
-		 * @throws NoSuchFieldException
-		 * @throws SecurityException
-		 */
-		public List<Object> importExcelData(InputStream in, Class<?> clazz) throws IOException,
-				SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
-
-			POIFSFileSystem fs = new POIFSFileSystem(in);
-			workbook = getHSSFWorkbook(fs);
-
-			HSSFSheet sheet = workbook.getSheetAt(0);
-			return importExcelData(sheet, clazz);
-		}
-
-		public List<Object> importExcelData(InputStream in, Class<?> clazz, String... sheetNames) throws IOException,
-				SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
-
-			POIFSFileSystem fs = new POIFSFileSystem(in);
-			workbook = getHSSFWorkbook(fs);
-
-			List<Object> objs = new ArrayList<Object>();
-			if (ArrayUtils.isEmpty(sheetNames)) {
-				return objs;
-			}
-			for (String sheetName : sheetNames) {
-				HSSFSheet sheet = workbook.getSheet(sheetName);
-				if (sheet == null) {
-					continue;
-				}
-				List<Object> obj = importExcelData(sheet, clazz);
-				objs.addAll(obj);
-
-			}
-			return objs;
-		}
-
-		/**
-		 *
-		 * importExcelData: Excel 模板严格按照生成的模板格式 获取列头信息 即获取了遍历的集合
-		 * 每行应该具有的数据列数，必须强制满足条件 即：导入的数据行 列数必须与列头数保持一致 需要解析数据中是否有错误标记位，有则全部去掉
-		 * 
-		 * @param file
-		 * @throws FileNotFoundException
-		 * @throws IOException
-		 * @throws ParseException
-		 * @throws IllegalAccessException
-		 * @throws InstantiationException
-		 * @throws NoSuchFieldException
-		 * @throws SecurityException
-		 */
-		public List<Object> importExcelData(File file, Class<?> clazz) throws FileNotFoundException, IOException,
-				SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
-
-			POIFSFileSystem fs = new POIFSFileSystem(new FileInputStream(file));
-			workbook = getHSSFWorkbook(fs);
-
-			HSSFSheet sheet = workbook.getSheetAt(0);
-			return importExcelData(sheet, clazz);
-		}
-		
-		
 		/*
 		 * Excel 模板严格按照生成的模板格式 获取列头信息 即获取了遍历的集合 每行应该具有的数据列数，必须强制满足条件 即：导入的数据行
 		 * 列数必须与列头数保持一致 需要解析数据中是否有错误标记位，有则全部去掉 需要过滤掉全空数据，即每列数据均为空
 		 * 根据sheet数组决定圈梁数据导入还是根据页签分批次导入
 		 */
 		// modified by zhangtian 实现类用接口抽象
-		private List<Object> importExcelData(Class<?> clazz, Sheet... sheets) throws IOException,
+		protected List<Object> importExcelData(Class<?> clazz, Sheet... sheets) throws IOException,
 				SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
 
 			// === 标记变量，消除全部的空行记录
@@ -936,7 +826,6 @@ public class ExcelManager {
 				Field[] fields = clazz.getDeclaredFields();
 				for (Field field : fields) {
 					if (field.isAnnotationPresent(ExcelColumn.class)) {
-						ExcelColumn excelColumn = field.getAnnotation(ExcelColumn.class);
 						String fieldName = field.getName();
 						if (StringUtils.equals(fieldName, columnNameE.getString())) {
 							columnMap.put(columnNameE.getString(), fieldName);

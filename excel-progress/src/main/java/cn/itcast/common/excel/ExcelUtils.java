@@ -1,11 +1,19 @@
 package cn.itcast.common.excel;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
 import cn.itcast.common.excel.annotation.ExcelColumn;
@@ -166,5 +174,166 @@ public class ExcelUtils {
 			 */
 			return ExcelManager.createExcelManager().exportContainDataExcel_SXLSX(results, clazz) ;
 		}
+	}
+	
+	/**
+	 *
+	 * importExcelData: Excel 模板严格按照生成的模板格式 获取列头信息 即获取了遍历的集合
+	 * 每行应该具有的数据列数，必须强制满足条件 即：导入的数据行 列数必须与列头数保持一致 需要解析数据中是否有错误标记位，有则全部去掉
+	 * 
+	 * @param filePath
+	 * @param excelType Excel类型
+	 * @param clazz 携带注解的Bean字节码文件
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 * @throws ParseException
+	 * @throws IllegalAccessException
+	 * @throws InstantiationException
+	 * @throws NoSuchFieldException
+	 * @throws SecurityException
+	 */
+	public List<Object> importAllExcelData(String filePath, ExcelType excelType, Class<?> clazz) throws FileNotFoundException, IOException, SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
+		ExcelManager excelManager = ExcelManager.createExcelManager() ;
+		List<Object> list = new ArrayList<Object>() ;
+		
+		Iterator<Sheet> it = null ;
+		if(excelType.equals(ExcelType.XLS)) {
+			POIFSFileSystem fs = new POIFSFileSystem(new FileInputStream(filePath));
+			it = excelManager.getHSSFWorkbook(fs).sheetIterator();
+		} else if(excelType.equals(ExcelType.XLSX)){
+			it = excelManager.getXSSFWorkbook(filePath).sheetIterator() ;
+		} else {
+			it = excelManager.getSXSSFWorkbook(filePath).sheetIterator() ;
+		}
+		
+		while(it.hasNext()) {
+			list.addAll(excelManager.importExcelData(clazz, it.next())) ;
+		}
+		return list ;
+	}
+
+	/**
+	 *
+	 * importExcelData: Excel 模板严格按照生成的模板格式 获取列头信息 即获取了遍历的集合
+	 * 每行应该具有的数据列数，必须强制满足条件 即：导入的数据行 列数必须与列头数保持一致 需要解析数据中是否有错误标记位，有则全部去掉
+	 * 
+	 * @param filePath
+	 * @param excelType Excel类型
+	 * @param clazz 携带注解的Bean字节码文件
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 * @throws ParseException
+	 * @throws IllegalAccessException
+	 * @throws InstantiationException
+	 * @throws NoSuchFieldException
+	 * @throws SecurityException
+	 */
+	public List<Object> importAllExcelData(InputStream in, ExcelType excelType, Class<?> clazz) throws FileNotFoundException, IOException, SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
+		ExcelManager excelManager = ExcelManager.createExcelManager() ;
+		List<Object> list = new ArrayList<Object>() ;
+		
+		Iterator<Sheet> it = null ;
+		if(excelType.equals(ExcelType.XLS)) {
+			POIFSFileSystem fs = new POIFSFileSystem(in);
+			it = excelManager.getHSSFWorkbook(fs).sheetIterator();
+		} else if(excelType.equals(ExcelType.XLSX)){
+			it = excelManager.getXSSFWorkbook(in).sheetIterator() ;
+		} else {
+			it = excelManager.getSXSSFWorkbook(in).sheetIterator() ;
+		}
+		
+		while(it.hasNext()) {
+			list.addAll(excelManager.importExcelData(clazz, it.next())) ;
+		}
+		return list ;
+	}
+
+	/**
+	 * 
+	 *  importExcelData:(根据Sheet名称指定遍历). 
+	 *  @return_type:List<Object>
+	 *  @author zhangtian  
+	 *  @param in
+	 *  @param clazz
+	 *  @param sheetNames
+	 *  @return
+	 *  @throws IOException
+	 *  @throws SecurityException
+	 *  @throws NoSuchFieldException
+	 *  @throws InstantiationException
+	 *  @throws IllegalAccessException
+	 */
+	public List<Object> importExcelData(InputStream in, Class<?> clazz, String excelType, String... sheetNames) throws IOException,
+		SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
+	
+		ExcelManager excelManager = ExcelManager.createExcelManager() ;
+		if(ArrayUtils.isEmpty(sheetNames)) {
+			throw new RuntimeException("请指定页签Sheet名称...") ;
+		}
+		
+		Workbook workbook = null ;
+		if(excelType.equals(ExcelType.XLS)) {
+			POIFSFileSystem fs = new POIFSFileSystem(in);
+			workbook = excelManager.getHSSFWorkbook(fs);
+		} else if(excelType.equals(ExcelType.XLSX)){
+			workbook = excelManager.getXSSFWorkbook(in);
+		} else {
+			workbook = excelManager.getSXSSFWorkbook(in) ;
+		}
+		
+		Sheet[] sheets = new Sheet[sheetNames.length] ;
+		for(String sheetName : sheetNames) {
+			int i = 0; 
+			sheets[i] = workbook.getSheet(sheetName) ;
+			i++ ;
+		}
+		
+		return excelManager.importExcelData(clazz, sheets);
+	}
+	
+	/**
+	 * 
+	 * importExcelDate: Excel 模板严格按照生成的模板格式 获取列头信息 即获取了遍历的集合
+	 * 每行应该具有的数据列数，必须强制满足条件 即：导入的数据行 列数必须与列头数保持一致 需要解析数据中是否有错误标记位，有则全部去掉
+	 *  importExcelData:(根据Sheet索引指定遍历). 
+	 *  @return_type:List<Object>
+	 *  @author zhangtian  
+	 *  @param in
+	 *  @param clazz
+	 *  @param sheetNames
+	 *  @return
+	 *  @throws IOException
+	 *  @throws SecurityException
+	 *  @throws NoSuchFieldException
+	 *  @throws InstantiationException
+	 *  @throws IllegalAccessException
+	 */
+	public List<Object> importExcelData(InputStream in, Class<?> clazz, String excelType, int... sheetIndexes) throws IOException,
+		SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
+	
+		ExcelManager excelManager = ExcelManager.createExcelManager() ;
+		
+		if(ArrayUtils.isEmpty(sheetIndexes)) {
+			throw new RuntimeException("请指定页签Sheet索引...") ;
+		}
+		
+		Workbook workbook = null ;
+		if(excelType.equals(ExcelType.XLS)) {
+			POIFSFileSystem fs = new POIFSFileSystem(in);
+			workbook = excelManager.getHSSFWorkbook(fs);
+		} else if(excelType.equals(ExcelType.XLSX)){
+			workbook = excelManager.getXSSFWorkbook(in);
+		} else {
+			workbook = excelManager.getSXSSFWorkbook(in) ;
+		}
+		
+		Sheet[] sheets = new Sheet[sheetIndexes.length] ;
+		for(int sheetIndex : sheetIndexes) {
+			int i = 0; 
+			sheets[i] = workbook.getSheetAt(sheetIndex) ;
+			i++ ;
+		}
+		
+		return excelManager.importExcelData(clazz, sheets);
 	}
 }
