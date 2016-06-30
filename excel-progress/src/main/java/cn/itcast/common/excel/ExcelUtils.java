@@ -398,9 +398,9 @@ public class ExcelUtils {
 		results.put("isBigData", isBigData) ;
 		results.put("pageSize", pageSize) ;
 		if(ExcelType.XLS.equals(excelType)) {
-			return ExcelManager.createExcelManager().exportContainDataExcel_XLS(results, clazz) ;
+			return ExcelManager.createExcelManager().exportContainErrorDataExcel_XLS(results, clazz) ;
 		} else if(ExcelType.XLSX.equals(excelType)) {
-			return ExcelManager.createExcelManager().exportContainDataExcel_XLSX(results, clazz);
+			return ExcelManager.createExcelManager().exportContainErrorDataExcel_XLSX(results, clazz);
 		} else {
 			/*
 			 * 导出Excel应对一定量大数据策略2
@@ -408,7 +408,7 @@ public class ExcelUtils {
 			 * 导出数据后及时刷新内存
 			 * 
 			 */
-			return ExcelManager.createExcelManager().exportContainDataExcel_SXLSX(results, clazz) ;
+			return ExcelManager.createExcelManager().exportContainErrorDataExcel_SXLSX(results, clazz) ;
 		}
 	}
 	
@@ -464,9 +464,9 @@ public class ExcelUtils {
 		results.put("isBigData", false) ;
 		results.put("pageSize", 0) ;
 		if(ExcelType.XLS.equals(excelType)) {
-			return ExcelManager.createExcelManager().exportContainDataExcel_XLS(results, clazz) ;
+			return ExcelManager.createExcelManager().exportContainErrorDataExcel_XLS(results, clazz) ;
 		} else if(ExcelType.XLSX.equals(excelType)) {
-			return ExcelManager.createExcelManager().exportContainDataExcel_XLSX(results, clazz);
+			return ExcelManager.createExcelManager().exportContainErrorDataExcel_XLSX(results, clazz);
 		} else {
 			/*
 			 * 导出Excel应对一定量大数据策略2
@@ -474,7 +474,7 @@ public class ExcelUtils {
 			 * 导出数据后及时刷新内存
 			 * 
 			 */
-			return ExcelManager.createExcelManager().exportContainDataExcel_SXLSX(results, clazz) ;
+			return ExcelManager.createExcelManager().exportContainErrorDataExcel_SXLSX(results, clazz) ;
 		}
 	}
 }
