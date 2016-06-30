@@ -1,7 +1,10 @@
 package cn.itcast.common.excel.test;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Date;
@@ -10,6 +13,8 @@ import java.util.UUID;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.junit.Test;
+
+import com.alibaba.fastjson.JSONObject;
 
 import cn.itcast.common.excel.ExcelUtils;
 import cn.itcast.common.excel.constants.ExcelType;
@@ -49,7 +54,7 @@ public class ExcelTest {
 		appDatas.add(u1) ;
 		appDatas.add(u2) ;
 		appDatas.add(u3) ;
-		for(int i = 0; i < 70000; i++) {
+		for(int i = 0; i < 10000; i++) {
 			BaseUser u = new BaseUser() ;
 			u.setId(UUID.randomUUID().toString());
 			u.setUsername("Demo"+(i+1));
@@ -58,8 +63,8 @@ public class ExcelTest {
 		}
 		
 		long startTime = new Date().getTime() ;
-		Workbook workbook = ExcelUtils.exportExcelData(appDatas, BaseUser.class, ExcelType.XLSX, true, 15000) ;
-		OutputStream out = new FileOutputStream(new File("C:\\Users\\zhangtian\\Desktop\\demo.xlsx")) ;
+		Workbook workbook = ExcelUtils.exportExcelData(appDatas, BaseUser.class, ExcelType.OTHER, true, 2500) ;
+		OutputStream out = new FileOutputStream(new File("C:\\Users\\zhangtian\\Desktop\\demo11.xlsx")) ;
 		System.out.println(new Date().getTime() - startTime);
 		workbook.write(out);
 		out.flush();
@@ -71,10 +76,18 @@ public class ExcelTest {
 	 * 导出Excel应对一定量大数据策略2
 	 * 分页签Sheet导出海量数据
 	 * 导出数据后及时刷新内存
+	 * @throws IOException 
+	 * @throws IllegalAccessException 
+	 * @throws InstantiationException 
+	 * @throws NoSuchFieldException 
+	 * @throws SecurityException 
+	 * @throws FileNotFoundException 
 	 */
 	@Test
-	public void testExportExcelBigData() {
-		
+	public void testExcelImportData() throws FileNotFoundException, SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException, IOException {
+		List<Object> list = ExcelUtils.importExcelData(new FileInputStream("C:\\Users\\zhangtian\\Desktop\\demo11.xlsx"), ExcelType.OTHER, BaseUser.class, new String[]{"sheet2","sheet3"}) ;
+		System.out.println(list.size());
+		System.out.println(JSONObject.toJSON(list.get(0)));
 	}
 	
 }

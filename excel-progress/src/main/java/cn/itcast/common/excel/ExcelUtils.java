@@ -30,6 +30,10 @@ import cn.itcast.common.excel.model.CellColumnValue;
  */
 public class ExcelUtils {
 	
+	private ExcelUtils(){
+		
+	}
+	
 	/**
 	 * 
 	 * getExcelModalInfo:(获取Excel的头部标题以及列头信息)
@@ -42,7 +46,7 @@ public class ExcelUtils {
 	 * @return
 	 * @author zhangtian
 	 */
-	public static Workbook exportExcelData(List<?> appDatas, Class<?> clazz, ExcelType excelType, boolean isBigData, int pageSize) {
+	public static final Workbook exportExcelData(List<?> appDatas, Class<?> clazz, ExcelType excelType, boolean isBigData, int pageSize) {
 		
 		Map<String, Object> results = new HashMap<String, Object>() ;
 		Field[] fields = clazz.getDeclaredFields() ;
@@ -121,7 +125,7 @@ public class ExcelUtils {
 	 * @return
 	 * @author zhangtian
 	 */
-	public static Workbook exportExcelData(List<?> appDatas, Class<?> clazz, ExcelType excelType, String sheetNames) {
+	public static final Workbook exportExcelData(List<?> appDatas, Class<?> clazz, ExcelType excelType, String sheetNames) {
 		
 		Map<String, Object> results = new HashMap<String, Object>() ;
 		Field[] fields = clazz.getDeclaredFields() ;
@@ -186,13 +190,12 @@ public class ExcelUtils {
 	 * @param clazz 携带注解的Bean字节码文件
 	 * @throws FileNotFoundException
 	 * @throws IOException
-	 * @throws ParseException
 	 * @throws IllegalAccessException
 	 * @throws InstantiationException
 	 * @throws NoSuchFieldException
 	 * @throws SecurityException
 	 */
-	public List<Object> importAllExcelData(String filePath, ExcelType excelType, Class<?> clazz) throws FileNotFoundException, IOException, SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
+	public static final List<Object> importAllExcelData(String filePath, ExcelType excelType, Class<?> clazz) throws FileNotFoundException, IOException, SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
 		ExcelManager excelManager = ExcelManager.createExcelManager() ;
 		List<Object> list = new ArrayList<Object>() ;
 		
@@ -200,10 +203,8 @@ public class ExcelUtils {
 		if(excelType.equals(ExcelType.XLS)) {
 			POIFSFileSystem fs = new POIFSFileSystem(new FileInputStream(filePath));
 			it = excelManager.getHSSFWorkbook(fs).sheetIterator();
-		} else if(excelType.equals(ExcelType.XLSX)){
-			it = excelManager.getXSSFWorkbook(filePath).sheetIterator() ;
 		} else {
-			it = excelManager.getSXSSFWorkbook(filePath).sheetIterator() ;
+			it = excelManager.getXSSFWorkbook(filePath).sheetIterator() ;
 		}
 		
 		while(it.hasNext()) {
@@ -222,13 +223,12 @@ public class ExcelUtils {
 	 * @param clazz 携带注解的Bean字节码文件
 	 * @throws FileNotFoundException
 	 * @throws IOException
-	 * @throws ParseException
 	 * @throws IllegalAccessException
 	 * @throws InstantiationException
 	 * @throws NoSuchFieldException
 	 * @throws SecurityException
 	 */
-	public List<Object> importAllExcelData(InputStream in, ExcelType excelType, Class<?> clazz) throws FileNotFoundException, IOException, SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
+	public static final List<Object> importAllExcelData(InputStream in, ExcelType excelType, Class<?> clazz) throws FileNotFoundException, IOException, SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
 		ExcelManager excelManager = ExcelManager.createExcelManager() ;
 		List<Object> list = new ArrayList<Object>() ;
 		
@@ -236,10 +236,8 @@ public class ExcelUtils {
 		if(excelType.equals(ExcelType.XLS)) {
 			POIFSFileSystem fs = new POIFSFileSystem(in);
 			it = excelManager.getHSSFWorkbook(fs).sheetIterator();
-		} else if(excelType.equals(ExcelType.XLSX)){
-			it = excelManager.getXSSFWorkbook(in).sheetIterator() ;
 		} else {
-			it = excelManager.getSXSSFWorkbook(in).sheetIterator() ;
+			it = excelManager.getXSSFWorkbook(in).sheetIterator() ;
 		}
 		
 		while(it.hasNext()) {
@@ -263,7 +261,7 @@ public class ExcelUtils {
 	 *  @throws InstantiationException
 	 *  @throws IllegalAccessException
 	 */
-	public List<Object> importExcelData(InputStream in, Class<?> clazz, String excelType, String... sheetNames) throws IOException,
+	public static final List<Object> importExcelData(InputStream in, ExcelType excelType, Class<?> clazz, String... sheetNames) throws IOException,
 		SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
 	
 		ExcelManager excelManager = ExcelManager.createExcelManager() ;
@@ -275,15 +273,13 @@ public class ExcelUtils {
 		if(excelType.equals(ExcelType.XLS)) {
 			POIFSFileSystem fs = new POIFSFileSystem(in);
 			workbook = excelManager.getHSSFWorkbook(fs);
-		} else if(excelType.equals(ExcelType.XLSX)){
-			workbook = excelManager.getXSSFWorkbook(in);
 		} else {
-			workbook = excelManager.getSXSSFWorkbook(in) ;
+			workbook = excelManager.getXSSFWorkbook(in);
 		}
 		
 		Sheet[] sheets = new Sheet[sheetNames.length] ;
+		int i = 0; 
 		for(String sheetName : sheetNames) {
-			int i = 0; 
 			sheets[i] = workbook.getSheet(sheetName) ;
 			i++ ;
 		}
@@ -308,7 +304,7 @@ public class ExcelUtils {
 	 *  @throws InstantiationException
 	 *  @throws IllegalAccessException
 	 */
-	public List<Object> importExcelData(InputStream in, Class<?> clazz, String excelType, int... sheetIndexes) throws IOException,
+	public static final List<Object> importExcelData(InputStream in, ExcelType excelType, Class<?> clazz, int... sheetIndexes) throws IOException,
 		SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
 	
 		ExcelManager excelManager = ExcelManager.createExcelManager() ;
@@ -321,15 +317,13 @@ public class ExcelUtils {
 		if(excelType.equals(ExcelType.XLS)) {
 			POIFSFileSystem fs = new POIFSFileSystem(in);
 			workbook = excelManager.getHSSFWorkbook(fs);
-		} else if(excelType.equals(ExcelType.XLSX)){
-			workbook = excelManager.getXSSFWorkbook(in);
 		} else {
-			workbook = excelManager.getSXSSFWorkbook(in) ;
-		}
+			workbook = excelManager.getXSSFWorkbook(in);
+		} 
 		
 		Sheet[] sheets = new Sheet[sheetIndexes.length] ;
+		int i = 0; 
 		for(int sheetIndex : sheetIndexes) {
-			int i = 0; 
 			sheets[i] = workbook.getSheetAt(sheetIndex) ;
 			i++ ;
 		}
