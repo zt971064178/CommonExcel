@@ -39,6 +39,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import cn.itcast.common.excel.annotation.ExcelColumn;
 import cn.itcast.common.excel.constants.CommentType;
 import cn.itcast.common.excel.model.CellColumnValue;
+import cn.itcast.common.excel.model.ValueBean;
 import cn.itcast.common.excel.utils.StringUtils;
 
 /**
@@ -635,11 +636,207 @@ public class ExcelManager {
 		}
 	}
 	
+	/*
+	 * 创建错误数据
+	 */
+	private void createAppRowHasErrorData(int startFlag, List<Object> appData, Class<?> clazz, Integer cellHeaderNum,boolean isBigData, int pageSize, Sheet... sheets) {
+
+		Row row = null;
+		Cell cellAppDataCell = null;
+		ExcelColumn excelColumn = null;
+		if (cellHeaderNum != 0) {
+			if(CollectionUtils.isNotEmpty(appData)) {
+				if(isBigData) {
+					int totalSize = appData.size() ;
+					int start = 0 ;
+					pageSize = pageSize >= totalSize ? totalSize : pageSize ;
+					int end = pageSize ;
+					for(Sheet sheet : sheets) {
+						System.out.println(start+"===>"+end);
+						// === 行记录数
+						int k = 0 ;
+						for (int i = start; i < end; i++) {
+							// === 列记录数
+							row = sheet.createRow(k+startFlag);
+							k++;
+							Object o = appData.get(i);
+							Field[] fields = o.getClass().getDeclaredFields();
+							int j = 0;
+							for (Field field : fields) {
+								if (field.isAnnotationPresent(ExcelColumn.class)) {
+									field.setAccessible(true);
+									excelColumn = field.getAnnotation(ExcelColumn.class);
+									try {
+										cellAppDataCell = row.createCell(j);
+										if(StringUtils.equals(excelColumn.autoIncrement(), "Y")){
+											if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+												cellAppDataCell.setCellValue(new HSSFRichTextString((k+1)+""));
+											} else {
+												cellAppDataCell.setCellValue(new XSSFRichTextString((k+1)+""));
+											}
+										}else{
+											Object value = field.get(o);
+											if (field.getType().isAssignableFrom(ValueBean.class)) {
+												if (value != null) {
+													ValueBean valueBean = (ValueBean) value;
+													if(valueBean.getIsErr()) {
+														if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+															cellAppDataCell.setCellValue(new HSSFRichTextString(
+																		cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(value.toString())));
+														} else {
+															cellAppDataCell.setCellValue(new XSSFRichTextString(
+																		cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(value.toString())));
+														}
+														cellAppDataCell.setCellStyle(errorDataStyle);
+													} else {
+														if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+															cellAppDataCell.setCellValue(new HSSFRichTextString(
+																		cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(value.toString())));
+														} else {
+															cellAppDataCell.setCellValue(new XSSFRichTextString(
+																		cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(value.toString())));
+														}
+														cellAppDataCell.setCellStyle(dataStyle);
+													}
+												} else {
+													if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+														cellAppDataCell.setCellValue(new HSSFRichTextString(
+																	cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar("")));
+													} else {
+														cellAppDataCell.setCellValue(new XSSFRichTextString(
+																	cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar("")));
+													}
+													cellAppDataCell.setCellStyle(dataStyle);
+												}
+											} else {
+												if (value != null) {
+													if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+														cellAppDataCell.setCellValue(new HSSFRichTextString(
+																	cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(value.toString())));
+													} else {
+														cellAppDataCell.setCellValue(new XSSFRichTextString(
+																	cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(value.toString())));
+													}
+												} else {
+													if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+														cellAppDataCell.setCellValue(new HSSFRichTextString(
+																	cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar("")));
+													} else {
+														cellAppDataCell.setCellValue(new XSSFRichTextString(
+																	cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar("")));
+													}
+												}
+												cellAppDataCell.setCellStyle(dataStyle);
+											}
+										}
+										j++;
+									} catch (Exception e) {
+										e.printStackTrace();
+									}
+								}
+							}
+						}
+						
+						start = start + pageSize ;
+						end = end + pageSize ;
+						if(end >= totalSize) {
+							end = totalSize ;
+						}
+					}
+				} else {
+					for(Sheet sheet : sheets) {
+						// === 行记录数
+						for (int i = 0; i < appData.size(); i++) {
+							// === 列记录数
+							row = sheet.createRow(i + startFlag);
+							Object o = appData.get(i);
+							Field[] fields = o.getClass().getDeclaredFields();
+							int j = 0;
+							for (Field field : fields) {
+								if (field.isAnnotationPresent(ExcelColumn.class)) {
+									field.setAccessible(true);
+									excelColumn = field.getAnnotation(ExcelColumn.class);
+									try {
+										cellAppDataCell = row.createCell(j);
+										if(StringUtils.equals(excelColumn.autoIncrement(), "Y")){
+											if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+												cellAppDataCell.setCellValue(new HSSFRichTextString((i+1)+""));
+											} else {
+												cellAppDataCell.setCellValue(new XSSFRichTextString((i+1)+""));
+											}
+										}else{
+											Object value = field.get(o);
+											if (field.getType().isAssignableFrom(ValueBean.class)) {
+												ValueBean valueBean = (ValueBean) value;
+												if (value != null) {
+													if (valueBean.getIsErr()) {
+														if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+															cellAppDataCell.setCellValue(new HSSFRichTextString(
+																	cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(value.toString())));
+														} else {
+															cellAppDataCell.setCellValue(new XSSFRichTextString(
+																	cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(value.toString())));
+														}
+														cellAppDataCell.setCellStyle(errorDataStyle);
+													} else {
+														if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+															cellAppDataCell.setCellValue(new HSSFRichTextString(
+																	cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(value.toString())));
+														} else {
+															cellAppDataCell.setCellValue(new XSSFRichTextString(
+																	cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(value.toString())));
+														}
+														cellAppDataCell.setCellStyle(dataStyle);
+													}
+												} else {
+													if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+														cellAppDataCell.setCellValue(new HSSFRichTextString(
+																cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar("")));
+													} else {
+														cellAppDataCell.setCellValue(new XSSFRichTextString(
+																cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar("")));
+													}
+													cellAppDataCell.setCellStyle(dataStyle);
+												}
+											} else {
+												if (value != null) {
+													if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+														cellAppDataCell.setCellValue(new HSSFRichTextString(
+																cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(value.toString())));
+													} else {
+														cellAppDataCell.setCellValue(new XSSFRichTextString(
+																cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(value.toString())));
+													}
+												} else {
+													if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+														cellAppDataCell.setCellValue(new HSSFRichTextString(
+																cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar("")));
+													} else {
+														cellAppDataCell.setCellValue(new XSSFRichTextString(
+																cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar("")));
+													}
+												}
+												cellAppDataCell.setCellStyle(dataStyle);
+											}
+										}
+										j++;
+									} catch (Exception e) {
+										e.printStackTrace();
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	// =========================================== 创建数据导入导出
 	// ===========================================
 	// === 导出Excel的表格
 	@SuppressWarnings({ "unchecked"})
-	public Workbook exportContainDataExcel_XLS(Map<String, Object> results, Class<?> clazz) {
+	protected Workbook exportContainDataExcel_XLS(Map<String, Object> results, Class<?> clazz) {
 		// ======================== 页签创建 ==========================
 		// === 获取HSSFWorkbook对象
 		workbook = getHSSFWorkbook();
@@ -691,7 +888,7 @@ public class ExcelManager {
 	
 	// === 导出Excel的表格
 	@SuppressWarnings({ "unchecked"})
-	public Workbook exportContainDataExcel_XLSX(Map<String, Object> results, Class<?> clazz) {
+	protected Workbook exportContainDataExcel_XLSX(Map<String, Object> results, Class<?> clazz) {
 		// ======================== 页签创建 ==========================
 		// === 获取HSSFWorkbook对象
 		workbook = getXSSFWorkbook();
@@ -742,11 +939,65 @@ public class ExcelManager {
 	}
 	
 	// === 导出Excel的表格
+	@SuppressWarnings({ "unchecked"})
+	protected Workbook exportContainDataExcel_SXLSX(Map<String, Object> results, Class<?> clazz) {
+		// ======================== 页签创建 ==========================
+		// === 获取HSSFWorkbook对象
+		workbook = getSXSSFWorkbook();
+
+		String[] sheetNames = (String[]) results.get("sheetNames") ;
+		Sheet[] sheets = new Sheet[sheetNames.length] ;
+		for(int i = 0; i<sheetNames.length; i++) {
+			sheets[i] = workbook.createSheet(sheetNames[i]);
+		}
+		// ========================= 样式设置 =========================
+		// === 设置表头样式
+		setHeaderCellStyles(workbook);
+		// 设置警告信息样式
+		setWarnerCellStyles(workbook);
+		// === 设置列头样式
+		setTitleCellStyles(workbook);
+		// === 设置数据样式
+		setDataCellStyles(workbook);
+
+		// ========================= 数据创建 ==========================
+		// === 创建标题数据
+		int startFlag = 0 ;
+		if(results.get("headerName") != null) {
+			createAppRowHeaderData(results.get("headerName").toString(),startFlag,((List<String>) results.get("columnNames")).size(), sheets);
+			startFlag++ ;
+		}
+		
+		// 创建警告头信息
+		if(results.get("warningInfo") != null) {
+			createAppWaringData((String[])results.get("warningInfo"),startFlag, ((List<String>) results.get("columnNames")).size(),sheets) ;
+			startFlag++ ;
+		}
+		
+		// === 创建列头数据信息
+		if(results.get("columnNames") != null) {
+			createAppRowCellHeaderData(startFlag, (List<CellColumnValue>) results.get("columnNames"), clazz, sheets);
+			startFlag++ ;
+		}
+		// === 为空模板创建初始化数据 空数据样式
+		createAppRowHasData(startFlag, (List<Object>) results.get("appDatas"), clazz,
+				((List<String>) results.get("columnNames")).size(),(boolean)results.get("isBigData"), 
+				(int)results.get("pageSize"),sheets);
+		return workbook;
+		// ========================= 文件输出 ==========================
+		// FileOutputStream out = new FileOutputStream(filePath);
+		// workbook.write(out);
+		// out.close();
+	}
+	
+	// ======================================= Excel错误信息导出
+	// =======================================
+	// === 导出Excel的表格
 		@SuppressWarnings({ "unchecked"})
-		public Workbook exportContainDataExcel_SXLSX(Map<String, Object> results, Class<?> clazz) {
+		protected Workbook exportContainErrorDataExcel_XLS(Map<String, Object> results, Class<?> clazz) {
 			// ======================== 页签创建 ==========================
 			// === 获取HSSFWorkbook对象
-			workbook = getSXSSFWorkbook();
+			workbook = getHSSFWorkbook();
 
 			String[] sheetNames = (String[]) results.get("sheetNames") ;
 			Sheet[] sheets = new Sheet[sheetNames.length] ;
@@ -762,6 +1013,8 @@ public class ExcelManager {
 			setTitleCellStyles(workbook);
 			// === 设置数据样式
 			setDataCellStyles(workbook);
+			// === 错误数据样式
+			setErrorDataStyle(workbook);
 
 			// ========================= 数据创建 ==========================
 			// === 创建标题数据
@@ -783,7 +1036,7 @@ public class ExcelManager {
 				startFlag++ ;
 			}
 			// === 为空模板创建初始化数据 空数据样式
-			createAppRowHasData(startFlag, (List<Object>) results.get("appDatas"), clazz,
+			createAppRowHasErrorData(startFlag, (List<Object>) results.get("appDatas"), clazz,
 					((List<String>) results.get("columnNames")).size(),(boolean)results.get("isBigData"), 
 					(int)results.get("pageSize"),sheets);
 			return workbook;
@@ -793,148 +1046,256 @@ public class ExcelManager {
 			// out.close();
 		}
 		
-		// ======================================= Excel数据导入
-		// =======================================
-		/*
-		 * Excel 模板严格按照生成的模板格式 获取列头信息 即获取了遍历的集合 每行应该具有的数据列数，必须强制满足条件 即：导入的数据行
-		 * 列数必须与列头数保持一致 需要解析数据中是否有错误标记位，有则全部去掉 需要过滤掉全空数据，即每列数据均为空
-		 * 根据sheet数组决定圈梁数据导入还是根据页签分批次导入
-		 */
-		// modified by zhangtian 实现类用接口抽象
-		protected List<Object> importExcelData(Class<?> clazz, Sheet... sheets) throws IOException,
-				SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
+		// === 导出Excel的表格
+		@SuppressWarnings({ "unchecked"})
+		protected Workbook exportContainErrorDataExcel_XLSX(Map<String, Object> results, Class<?> clazz) {
+			// ======================== 页签创建 ==========================
+			// === 获取HSSFWorkbook对象
+			workbook = getXSSFWorkbook();
 
-			// === 标记变量，消除全部的空行记录
-			StringBuilder sb = new StringBuilder();
-
-			// === 提取导入数据模板中的列头信息，即第三列的数据
-			Row headerCellRow = sheets[0].getRow(2);
-			Integer cellHeaderNum = Integer.valueOf(headerCellRow.getLastCellNum());
-			Map<String, String> columnMap = new HashMap<String, String>() ;
-			Comment comment = null ;
-
-			for (int m = 0; m < cellHeaderNum; m++) {
-				Cell headerCell = headerCellRow.getCell(m) ;
-				if(ObjectUtils.notEqual(headerCell.getCellComment(), null)) {
-					comment = headerCell.getCellComment() ;
-				} else {
-					throw new RuntimeException("列头批注丢失......") ;
-				}
-				
-				RichTextString columnNameE = comment.getString() ;
-				// === 循环遍历字节码注解 获取属性名称
-				Field[] fields = clazz.getDeclaredFields();
-				for (Field field : fields) {
-					if (field.isAnnotationPresent(ExcelColumn.class)) {
-						String fieldName = field.getName();
-						if (StringUtils.equals(fieldName, columnNameE.getString())) {
-							columnMap.put(columnNameE.getString(), fieldName);
-						}
-					}
-				}
+			String[] sheetNames = (String[]) results.get("sheetNames") ;
+			Sheet[] sheets = new Sheet[sheetNames.length] ;
+			for(int i = 0; i<sheetNames.length; i++) {
+				sheets[i] = workbook.createSheet(sheetNames[i]);
 			}
+			// ========================= 样式设置 =========================
+			// === 设置表头样式
+			setHeaderCellStyles(workbook);
+			// 设置警告信息样式
+			setWarnerCellStyles(workbook);
+			// === 设置列头样式
+			setTitleCellStyles(workbook);
+			// === 设置数据样式
+			setDataCellStyles(workbook);
+			// === 设置错误数据样式
+			setErrorDataStyle(workbook);
 
-			List<Object> rowList = new ArrayList<Object>();
-			Row dataRow = null ;
-			Cell dataCell = null;
-			for(Sheet sheet : sheets) {
-				// === 循环遍历数据
-				Integer rowNum = sheet.getLastRowNum();
-				for (int i = 3; i <= rowNum; i++) {
-					sb.delete(0, sb.length());
-					sb.append(String.valueOf(i));
-					dataRow = sheet.getRow(i);
-					if (dataRow != null) {
-						Object obj = clazz.newInstance();
-						for (int j = 0; j < cellHeaderNum; j++) {
-							dataCell = dataRow.getCell(j);
-							// =================================== 读取Excel文件中的数据
-							// 文本，数值或日期类型的条件判断 开始 =============================
-							if (dataCell != null) {
-								Object value = "";
-								switch (dataCell.getCellType()) {
-								case HSSFCell.CELL_TYPE_NUMERIC:
-									if (HSSFDateUtil.isCellDateFormatted(dataCell)) {
-										// === 如果是date类型则 ，获取该cell的date值
-										// value =
-										// HSSFDateUtil.getJavaDate(dataCell.getNumericCellValue()).toString();
-										Date date = dataCell.getDateCellValue();
-										// SimpleDateFormat sdf = new
-										// SimpleDateFormat("yyyy-MM-dd") ;
-										// value = sdf.format(date) ;
-										value = date;
-									} else {// === 纯数字
-										dataCell.setCellType(Cell.CELL_TYPE_STRING);
-										value = String.valueOf(dataCell.getRichStringCellValue().toString());
-									}
-									break;
-
-								case HSSFCell.CELL_TYPE_STRING:
-									value = dataCell.getRichStringCellValue().toString();
-									break;
-
-								case HSSFCell.CELL_TYPE_FORMULA:
-									// === 读公式计算值
-									value = String.valueOf(dataCell.getNumericCellValue());
-									// === 如果获取的数据值为非法值,则转换为获取字符串
-									if (value.equals("NaN")) {
-										value = dataCell.getRichStringCellValue().toString();
-									}
-									// cell.getCellFormula() ;//读公式
-									break;
-
-								case HSSFCell.CELL_TYPE_BOOLEAN:
-									value = dataCell.getBooleanCellValue();
-									break;
-
-								case HSSFCell.CELL_TYPE_BLANK:
-									value = "";
-									break;
-
-								case HSSFCell.CELL_TYPE_ERROR:
-									value = "";
-									break;
-
-								default:
-									value = dataCell.getRichStringCellValue().toString();
-									break;
-								}
-								sb.append(value);
-
-								// === 每一行数据的列头批注是否匹配，决定如何反射设置属性的值
-								String columnNameE = sheet.getRow(2).getCell(j).getCellComment().getString().getString() ;
-								String fieldName = columnMap.get(columnNameE);
-								Field f = obj.getClass().getDeclaredField(fieldName);
-								value = transValue(f, value);
-								f.setAccessible(true);
-								f.set(obj, value);
-							}
-							// =================================== 读取Excel文件中的数据
-							// 文本，数值或日期类型的条件判断 结束 =============================
-						}
-						if (StringUtils.trimToEmpty(sb.toString()).equals(String.valueOf(i))) {
-							Collections.emptyList();
-						} else {
-							rowList.add(obj);
-						}
-					}
-
-				}
+			// ========================= 数据创建 ==========================
+			// === 创建标题数据
+			int startFlag = 0 ;
+			if(results.get("headerName") != null) {
+				createAppRowHeaderData(results.get("headerName").toString(),startFlag,((List<String>) results.get("columnNames")).size(), sheets);
+				startFlag++ ;
 			}
 			
-			return rowList;
+			// 创建警告头信息
+			if(results.get("warningInfo") != null) {
+				createAppWaringData((String[])results.get("warningInfo"),startFlag, ((List<String>) results.get("columnNames")).size(),sheets) ;
+				startFlag++ ;
+			}
+			
+			// === 创建列头数据信息
+			if(results.get("columnNames") != null) {
+				createAppRowCellHeaderData(startFlag, (List<CellColumnValue>) results.get("columnNames"), clazz, sheets);
+				startFlag++ ;
+			}
+			// === 为空模板创建初始化数据 空数据样式
+			createAppRowHasErrorData(startFlag, (List<Object>) results.get("appDatas"), clazz,
+					((List<String>) results.get("columnNames")).size(),(boolean)results.get("isBigData"), 
+					(int)results.get("pageSize"),sheets);
+			return workbook;
+			// ========================= 文件输出 ==========================
+			// FileOutputStream out = new FileOutputStream(filePath);
+			// workbook.write(out);
+			// out.close();
 		}
 		
-		private Object transValue(Field f,Object value){
-			Type type = f.getGenericType();
-			String typeName = type.toString();
-			if(StringUtils.equals("class java.lang.Integer", typeName)){
-				value = Integer.parseInt(value.toString());
-			}else if(StringUtils.equals("class java.util.Date", typeName)){
-				if(!(value instanceof Date)){
-					value = null;
+		// === 导出Excel的表格
+		@SuppressWarnings({ "unchecked"})
+		protected Workbook exportContainErrorDataExcel_SXLSX(Map<String, Object> results, Class<?> clazz) {
+			// ======================== 页签创建 ==========================
+			// === 获取HSSFWorkbook对象
+			workbook = getSXSSFWorkbook();
+
+			String[] sheetNames = (String[]) results.get("sheetNames") ;
+			Sheet[] sheets = new Sheet[sheetNames.length] ;
+			for(int i = 0; i<sheetNames.length; i++) {
+				sheets[i] = workbook.createSheet(sheetNames[i]);
+			}
+			// ========================= 样式设置 =========================
+			// === 设置表头样式
+			setHeaderCellStyles(workbook);
+			// 设置警告信息样式
+			setWarnerCellStyles(workbook);
+			// === 设置列头样式
+			setTitleCellStyles(workbook);
+			// === 设置数据样式
+			setDataCellStyles(workbook);
+			// === 设置错误数据样式
+			setErrorDataStyle(workbook);
+
+			// ========================= 数据创建 ==========================
+			// === 创建标题数据
+			int startFlag = 0 ;
+			if(results.get("headerName") != null) {
+				createAppRowHeaderData(results.get("headerName").toString(),startFlag,((List<String>) results.get("columnNames")).size(), sheets);
+				startFlag++ ;
+			}
+			
+			// 创建警告头信息
+			if(results.get("warningInfo") != null) {
+				createAppWaringData((String[])results.get("warningInfo"),startFlag, ((List<String>) results.get("columnNames")).size(),sheets) ;
+				startFlag++ ;
+			}
+			
+			// === 创建列头数据信息
+			if(results.get("columnNames") != null) {
+				createAppRowCellHeaderData(startFlag, (List<CellColumnValue>) results.get("columnNames"), clazz, sheets);
+				startFlag++ ;
+			}
+			// === 为空模板创建初始化数据 空数据样式
+			createAppRowHasErrorData(startFlag, (List<Object>) results.get("appDatas"), clazz,
+					((List<String>) results.get("columnNames")).size(),(boolean)results.get("isBigData"), 
+					(int)results.get("pageSize"),sheets);
+			return workbook;
+			// ========================= 文件输出 ==========================
+			// FileOutputStream out = new FileOutputStream(filePath);
+			// workbook.write(out);
+			// out.close();
+		}
+	
+	// ======================================= Excel数据导入
+	// =======================================
+	/*
+	 * Excel 模板严格按照生成的模板格式 获取列头信息 即获取了遍历的集合 每行应该具有的数据列数，必须强制满足条件 即：导入的数据行
+	 * 列数必须与列头数保持一致 需要解析数据中是否有错误标记位，有则全部去掉 需要过滤掉全空数据，即每列数据均为空
+	 * 根据sheet数组决定圈梁数据导入还是根据页签分批次导入
+	 */
+	// modified by zhangtian 实现类用接口抽象
+	protected List<Object> importExcelData(Class<?> clazz, Sheet... sheets) throws IOException,
+			SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
+
+		// === 标记变量，消除全部的空行记录
+		StringBuilder sb = new StringBuilder();
+
+		// === 提取导入数据模板中的列头信息，即第三列的数据
+		Row headerCellRow = sheets[0].getRow(2);
+		Integer cellHeaderNum = Integer.valueOf(headerCellRow.getLastCellNum());
+		Map<String, String> columnMap = new HashMap<String, String>() ;
+		Comment comment = null ;
+
+		for (int m = 0; m < cellHeaderNum; m++) {
+			Cell headerCell = headerCellRow.getCell(m) ;
+			if(ObjectUtils.notEqual(headerCell.getCellComment(), null)) {
+				comment = headerCell.getCellComment() ;
+			} else {
+				throw new RuntimeException("列头批注丢失......") ;
+			}
+			
+			RichTextString columnNameE = comment.getString() ;
+			// === 循环遍历字节码注解 获取属性名称
+			Field[] fields = clazz.getDeclaredFields();
+			for (Field field : fields) {
+				if (field.isAnnotationPresent(ExcelColumn.class)) {
+					String fieldName = field.getName();
+					if (StringUtils.equals(fieldName, columnNameE.getString())) {
+						columnMap.put(columnNameE.getString(), fieldName);
+					}
 				}
 			}
-			return value;
 		}
+
+		List<Object> rowList = new ArrayList<Object>();
+		Row dataRow = null ;
+		Cell dataCell = null;
+		for(Sheet sheet : sheets) {
+			// === 循环遍历数据
+			Integer rowNum = sheet.getLastRowNum();
+			for (int i = 3; i <= rowNum; i++) {
+				sb.delete(0, sb.length());
+				sb.append(String.valueOf(i));
+				dataRow = sheet.getRow(i);
+				if (dataRow != null) {
+					Object obj = clazz.newInstance();
+					for (int j = 0; j < cellHeaderNum; j++) {
+						dataCell = dataRow.getCell(j);
+						// =================================== 读取Excel文件中的数据
+						// 文本，数值或日期类型的条件判断 开始 =============================
+						if (dataCell != null) {
+							Object value = "";
+							switch (dataCell.getCellType()) {
+							case HSSFCell.CELL_TYPE_NUMERIC:
+								if (HSSFDateUtil.isCellDateFormatted(dataCell)) {
+									// === 如果是date类型则 ，获取该cell的date值
+									// value =
+									// HSSFDateUtil.getJavaDate(dataCell.getNumericCellValue()).toString();
+									Date date = dataCell.getDateCellValue();
+									// SimpleDateFormat sdf = new
+									// SimpleDateFormat("yyyy-MM-dd") ;
+									// value = sdf.format(date) ;
+									value = date;
+								} else {// === 纯数字
+									dataCell.setCellType(Cell.CELL_TYPE_STRING);
+									value = String.valueOf(dataCell.getRichStringCellValue().toString());
+								}
+								break;
+
+							case HSSFCell.CELL_TYPE_STRING:
+								value = dataCell.getRichStringCellValue().toString();
+								break;
+
+							case HSSFCell.CELL_TYPE_FORMULA:
+								// === 读公式计算值
+								value = String.valueOf(dataCell.getNumericCellValue());
+								// === 如果获取的数据值为非法值,则转换为获取字符串
+								if (value.equals("NaN")) {
+									value = dataCell.getRichStringCellValue().toString();
+								}
+								// cell.getCellFormula() ;//读公式
+								break;
+
+							case HSSFCell.CELL_TYPE_BOOLEAN:
+								value = dataCell.getBooleanCellValue();
+								break;
+
+							case HSSFCell.CELL_TYPE_BLANK:
+								value = "";
+								break;
+
+							case HSSFCell.CELL_TYPE_ERROR:
+								value = "";
+								break;
+
+							default:
+								value = dataCell.getRichStringCellValue().toString();
+								break;
+							}
+							sb.append(value);
+
+							// === 每一行数据的列头批注是否匹配，决定如何反射设置属性的值
+							String columnNameE = sheet.getRow(2).getCell(j).getCellComment().getString().getString() ;
+							String fieldName = columnMap.get(columnNameE);
+							Field f = obj.getClass().getDeclaredField(fieldName);
+							value = transValue(f, value);
+							f.setAccessible(true);
+							f.set(obj, value);
+						}
+						// =================================== 读取Excel文件中的数据
+						// 文本，数值或日期类型的条件判断 结束 =============================
+					}
+					if (StringUtils.trimToEmpty(sb.toString()).equals(String.valueOf(i))) {
+						Collections.emptyList();
+					} else {
+						rowList.add(obj);
+					}
+				}
+
+			}
+		}
+		
+		return rowList;
+	}
+	
+	private Object transValue(Field f,Object value){
+		Type type = f.getGenericType();
+		String typeName = type.toString();
+		if(StringUtils.equals("class java.lang.Integer", typeName)){
+			value = Integer.parseInt(value.toString());
+		}else if(StringUtils.equals("class java.util.Date", typeName)){
+			if(!(value instanceof Date)){
+				value = null;
+			}
+		}
+		return value;
+	}
 }
