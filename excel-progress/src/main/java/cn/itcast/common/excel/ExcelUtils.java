@@ -277,6 +277,13 @@ public class ExcelUtils {
 			workbook = excelManager.getXSSFWorkbook(in);
 		}
 		
+		for(String name : sheetNames) {
+			if(workbook.getSheet(name) == null) {
+				throw new RuntimeException("Sheet页签指定的名称不存在......") ;
+			}
+			continue ;
+		}
+		
 		Sheet[] sheets = new Sheet[sheetNames.length] ;
 		int i = 0; 
 		for(String sheetName : sheetNames) {
@@ -320,6 +327,14 @@ public class ExcelUtils {
 		} else {
 			workbook = excelManager.getXSSFWorkbook(in);
 		} 
+		
+		int sheetNum = workbook.getNumberOfSheets() ;
+		for(int index : sheetIndexes) {
+			if((index+1) > sheetNum) {
+				throw new RuntimeException("Sheet页签下表越界......") ;
+			}
+			continue ;
+		}
 		
 		Sheet[] sheets = new Sheet[sheetIndexes.length] ;
 		int i = 0; 

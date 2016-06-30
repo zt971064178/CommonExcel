@@ -1170,11 +1170,45 @@ public class ExcelManager {
 	protected List<Object> importExcelData(Class<?> clazz, Sheet... sheets) throws IOException,
 			SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
 
+		// 导入数据分Sheet注意事项：各个Sheet的模板格式完全一致
+		int startFlag = 2 ;
+		// 1、获取第一行第一列头部批注
+		Cell firstCell = sheets[0].getRow(0).getCell(0) ;
+		Comment firstComment = firstCell.getCellComment() ;
+		if(firstComment == null) {
+			throw new RuntimeException("模板格式不正确，没有批注......") ;
+		}
+		
+		// 2、获取第二行第一列头部批注
+		Cell secondCell = sheets[0].getRow(1).getCell(0) ;
+		Comment secondComment = secondCell.getCellComment() ;
+		
+		if(secondComment == null) {
+			startFlag = 0 ;
+		} else {
+			String firstCommentStr = firstComment.getString().getString() ;
+			String secondCommentStr = secondComment.getString().getString() ;
+			if(StringUtils.equals(firstCommentStr, CommentType.EXCEL_HEADER.name())) {
+				if(StringUtils.equals(secondCommentStr, CommentType.EXCEL_WARING.name())) {
+					startFlag = 2 ;
+				} else {
+					startFlag = 1 ;
+				}
+			} else if(StringUtils.equals(firstCommentStr, CommentType.EXCEL_WARING.name())) {
+				if(StringUtils.equals(secondCommentStr, CommentType.EXCEL_HEADER.name())) {
+					startFlag = 2 ;
+				} else {
+					startFlag = 1 ;
+				}
+			} else {
+				startFlag = 0 ;
+			}
+		}
+		
 		// === 标记变量，消除全部的空行记录
 		StringBuilder sb = new StringBuilder();
-
 		// === 提取导入数据模板中的列头信息，即第三列的数据
-		Row headerCellRow = sheets[0].getRow(2);
+		Row headerCellRow = sheets[0].getRow(startFlag);
 		Integer cellHeaderNum = Integer.valueOf(headerCellRow.getLastCellNum());
 		Map<String, String> columnMap = new HashMap<String, String>() ;
 		Comment comment = null ;
@@ -1206,7 +1240,7 @@ public class ExcelManager {
 		for(Sheet sheet : sheets) {
 			// === 循环遍历数据
 			Integer rowNum = sheet.getLastRowNum();
-			for (int i = 3; i <= rowNum; i++) {
+			for (int i = (startFlag+1); i <= rowNum; i++) {
 				sb.delete(0, sb.length());
 				sb.append(String.valueOf(i));
 				dataRow = sheet.getRow(i);
@@ -1268,7 +1302,7 @@ public class ExcelManager {
 							sb.append(value);
 
 							// === 每一行数据的列头批注是否匹配，决定如何反射设置属性的值
-							String columnNameE = sheet.getRow(2).getCell(j).getCellComment().getString().getString() ;
+							String columnNameE = sheet.getRow(startFlag).getCell(j).getCellComment().getString().getString() ;
 							String fieldName = columnMap.get(columnNameE);
 							Field f = obj.getClass().getDeclaredField(fieldName);
 							value = transValue(f, value);

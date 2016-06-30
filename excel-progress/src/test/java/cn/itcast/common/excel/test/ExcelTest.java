@@ -86,7 +86,7 @@ public class ExcelTest {
 	 */
 	@Test
 	public void testExcelImportData() throws FileNotFoundException, SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException, IOException {
-		List<Object> list = ExcelUtils.importExcelData(new FileInputStream("C:\\Users\\zhangtian\\Desktop\\demo11.xlsx"), ExcelType.OTHER, BaseUser.class, new String[]{"sheet2","sheet3"}) ;
+		List<Object> list = ExcelUtils.importExcelData(new FileInputStream("C:\\Users\\zhangtian\\Desktop\\demoError.xls"), ExcelType.XLS, BaseUser.class, 0) ;
 		System.out.println(list.size());
 		System.out.println(JSONObject.toJSON(list.get(0)));
 	}
