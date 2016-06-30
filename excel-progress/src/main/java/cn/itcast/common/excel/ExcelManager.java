@@ -427,15 +427,20 @@ public class ExcelManager {
 				    // 将批注添加到单元格对象中
 					warningCell.setCellComment(comment);
 					
-					String warnResult = "" ;
-					for(String warning : warningInfo) {
-						warnResult += warning + "\r\n" ;
-					}
+					// === 转换提示信息列表，warnerInfo信息
+				    StringBuilder warnResult = new StringBuilder() ;
+				    warnResult.append("提示信息：\r\n") ;
+				    for(int i = 0; i < warningInfo.length; i++) {
+				    	warnResult.append("* ") ;
+				    	warnResult.append((i+1)+"、") ;
+				    	warnResult.append(warningInfo[i]+"。") ;
+				    	warnResult.append("\r\n") ;
+				    }
 					
 					if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
-						warningCell.setCellValue(new HSSFRichTextString(warnResult));
+						warningCell.setCellValue(new HSSFRichTextString(warnResult.toString()));
 					} else {
-						warningCell.setCellValue(new XSSFRichTextString(warnResult));
+						warningCell.setCellValue(new XSSFRichTextString(warnResult.toString()));
 					}
 					warningCell.setCellStyle(warnerStyle);
 
