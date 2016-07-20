@@ -11,7 +11,11 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
 	 * @author zhangtian
 	 */
 	public static String replaceEscapeChar(String str) {
-		return StringUtils.replaceEach(str, oldValue, newValue) ;
+		if(StringUtils.isNotBlank(str)) {
+			return StringUtils.replaceEach(str, oldValue, newValue) ;
+		} else {
+			return str ;
+		}
 	}
 	
 	/**
@@ -21,6 +25,10 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
 	 * @author zhangtian
 	 */
 	public static String replaceEscapeCharRollback(String str) {
-		return StringUtils.replaceEach(str, newValue, oldValue) ;
+		if(StringUtils.isNotBlank(str)) {
+			return StringUtils.replaceEach(str, newValue, oldValue) ;
+		} else {
+			return str ;
+		}
 	}
 }

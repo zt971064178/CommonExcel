@@ -777,19 +777,19 @@ public class ExcelManager {
 													if (valueBean.getIsErr()) {
 														if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
 															cellAppDataCell.setCellValue(new HSSFRichTextString(
-																	cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(valueBean.getValue().toString())));
+																	cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(valueBean.getValue())));
 														} else {
 															cellAppDataCell.setCellValue(new XSSFRichTextString(
-																	cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(valueBean.getValue().toString())));
+																	cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(valueBean.getValue())));
 														}
 														cellAppDataCell.setCellStyle(errorDataStyle);
 													} else {
 														if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
 															cellAppDataCell.setCellValue(new HSSFRichTextString(
-																	cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(valueBean.getValue().toString())));
+																	cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(valueBean.getValue())));
 														} else {
 															cellAppDataCell.setCellValue(new XSSFRichTextString(
-																	cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(valueBean.getValue().toString())));
+																	cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(valueBean.getValue())));
 														}
 														cellAppDataCell.setCellStyle(dataStyle);
 													}
