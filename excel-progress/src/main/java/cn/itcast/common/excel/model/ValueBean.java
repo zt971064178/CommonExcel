@@ -12,7 +12,7 @@ package cn.itcast.common.excel.model;
 public class ValueBean {
 
 	private String value ;
-	private Boolean isErr ;
+	private Boolean isErr = false ;
 
 	public ValueBean(){
 		super();

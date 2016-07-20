@@ -1270,7 +1270,10 @@ public class ExcelManager {
 								break;
 
 							case HSSFCell.CELL_TYPE_STRING:
-								value = dataCell.getRichStringCellValue().toString();
+								if(!"#N/A".equals(value)) {
+									value = dataCell.getRichStringCellValue().toString();
+								}
+								
 								break;
 
 							case HSSFCell.CELL_TYPE_FORMULA:
@@ -1281,9 +1284,6 @@ public class ExcelManager {
 									value = dataCell.getRichStringCellValue().toString();
 								}
 
-								if("#N/A".equals(value)) {
-									value = dataCell.getRichStringCellValue().toString();
-								}
 								// cell.getCellFormula() ;//读公式
 								break;
 
