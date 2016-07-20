@@ -1270,8 +1270,9 @@ public class ExcelManager {
 								break;
 
 							case HSSFCell.CELL_TYPE_STRING:
-								if(!"#N/A".equals(value)) {
-									value = dataCell.getRichStringCellValue().toString();
+								value = dataCell.getRichStringCellValue().toString();
+								if("#N/A".equals(value)) {
+									value = "" ;
 								}
 								
 								break;
