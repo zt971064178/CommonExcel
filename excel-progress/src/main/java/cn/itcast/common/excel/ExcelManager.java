@@ -1277,7 +1277,11 @@ public class ExcelManager {
 								// === 读公式计算值
 								value = String.valueOf(dataCell.getNumericCellValue());
 								// === 如果获取的数据值为非法值,则转换为获取字符串
-								if (value.equals("NaN")) {
+								if ("NaN".equals(value)) {
+									value = dataCell.getRichStringCellValue().toString();
+								}
+
+								if("#N/A".equals(value)) {
 									value = dataCell.getRichStringCellValue().toString();
 								}
 								// cell.getCellFormula() ;//读公式
@@ -1329,7 +1333,11 @@ public class ExcelManager {
 		Type type = f.getGenericType();
 		String typeName = type.toString();
 		if(StringUtils.equals("class java.lang.Integer", typeName)){
-			value = Integer.parseInt(value.toString());
+			if(null == value || "".equals(value)) {
+				value = null ;
+			} else {
+				value = Integer.parseInt(value.toString());
+			}
 		}else if(StringUtils.equals("class java.util.Date", typeName)){
 			if(!(value instanceof Date)){
 				value = null;
