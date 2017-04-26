@@ -899,7 +899,12 @@ public class ExcelManager {
 	protected Workbook exportContainDataExcel_XLSX(Map<String, Object> results, Class<?> clazz) {
 		// ======================== 页签创建 ==========================
 		// === 获取HSSFWorkbook对象
-		workbook = getXSSFWorkbook();
+        if(results.get("oldWorkbook") != null) {
+            workbook = (Workbook) results.get("oldWorkbook") ;
+            results.remove("oldWorkbook") ;
+        }else {
+            workbook = getXSSFWorkbook();
+        }
 
 		String[] sheetNames = (String[]) results.get("sheetNames") ;
 		Sheet[] sheets = new Sheet[sheetNames.length] ;
@@ -951,7 +956,12 @@ public class ExcelManager {
 	protected Workbook exportContainDataExcel_SXLSX(Map<String, Object> results, Class<?> clazz) {
 		// ======================== 页签创建 ==========================
 		// === 获取HSSFWorkbook对象
-		workbook = getSXSSFWorkbook();
+        if(results.get("oldWorkbook") != null) {
+            workbook = (Workbook) results.get("oldWorkbook") ;
+            results.remove("oldWorkbook") ;
+        }else {
+            workbook = getSXSSFWorkbook();
+        }
 
 		String[] sheetNames = (String[]) results.get("sheetNames") ;
 		Sheet[] sheets = new Sheet[sheetNames.length] ;
