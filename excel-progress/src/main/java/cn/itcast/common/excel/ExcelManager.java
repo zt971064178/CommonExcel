@@ -962,7 +962,6 @@ public class ExcelManager {
 	}
 	
 	// === 导出Excel的表格
-	@SuppressWarnings({ "unchecked"})
 	protected Workbook exportContainDataExcel_SXLSX(Map<String, Object> results, Class<?> clazz) {
 		// ======================== 页签创建 ==========================
 		// === 获取HSSFWorkbook对象
