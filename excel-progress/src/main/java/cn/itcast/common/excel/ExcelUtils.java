@@ -364,7 +364,6 @@ public class ExcelUtils {
 	 */
 	public static final List<Object> importExcelData(InputStream in, ExcelType excelType, Class<?> clazz, int... sheetIndexes) throws IOException,
 		SecurityException, NoSuchFieldException, InstantiationException, IllegalAccessException {
-	
 		ExcelManager excelManager = ExcelManager.createExcelManager() ;
 		
 		if(ArrayUtils.isEmpty(sheetIndexes)) {
