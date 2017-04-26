@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.poi.POIXMLDocument;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -476,7 +477,7 @@ public class ExcelUtils {
 	public static final Workbook getWorkbook(ExcelType excelType, InputStream in) throws IOException {
 		ExcelManager excelManager = ExcelManager.createExcelManager() ;
 		Workbook workbook = null ;
-		try {
+        try {
 			if(ExcelType.XLS.equals(excelType)) {
 				if(in != null) {
 					POIFSFileSystem poifsFileSystem = null ;

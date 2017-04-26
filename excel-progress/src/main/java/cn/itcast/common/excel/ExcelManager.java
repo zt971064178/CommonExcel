@@ -940,14 +940,30 @@ public class ExcelManager {
 	}
 
 	// 导出错误的Excel数据，代码重构
-	protected Workbook exportContainErrorDataExcel(Map<String, Object> results, Class<?> clazz, ExcelType excelType) {
+	private Workbook exportContainErrorDataExcel(Map<String, Object> results, Class<?> clazz, ExcelType excelType) {
 		// ======================== 页签创建 ==========================
-		// === 获取HSSFWorkbook对象
-		workbook = getSXSSFWorkbook();
+        if(results.get("oldWorkbook") != null) {
+            workbook = (Workbook) results.get("oldWorkbook") ;
+            results.remove("oldWorkbook") ;
+        }else {
+            // === 获取HSSFWorkbook对象
+            if(ExcelType.XLS.equals(excelType)) {
+                workbook = getHSSFWorkbook() ;
+            } else if(ExcelType.XLSX.equals(excelType)) {
+                workbook = getXSSFWorkbook() ;
+            }else {
+                workbook = getSXSSFWorkbook();
+            }
+        }
 
 		String[] sheetNames = (String[]) results.get("sheetNames") ;
 		Sheet[] sheets = new Sheet[sheetNames.length] ;
 		for(int i = 0; i<sheetNames.length; i++) {
+            // 导入之前删除已经存在的sheet
+            int sheetIndex = workbook.getSheetIndex(sheetNames[i]) ;
+            if(sheetIndex >= 0){
+                workbook.removeSheetAt(sheetIndex);
+            }
 			sheets[i] = workbook.createSheet(sheetNames[i]);
 		}
 		// ========================= 样式设置 =========================
