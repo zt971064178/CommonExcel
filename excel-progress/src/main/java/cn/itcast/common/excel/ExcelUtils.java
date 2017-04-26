@@ -411,72 +411,37 @@ public class ExcelUtils {
 	 * @author zhangtian
 	 */
 	public static final Workbook exportErrorExcelData(List<?> appDatas, Class<?> clazz, ExcelType excelType, boolean isBigData, int pageSize) {
-		
-		Map<String, Object> results = new HashMap<String, Object>() ;
-		Field[] fields = clazz.getDeclaredFields() ;
-		
-		// 保存标题
-		if(clazz.isAnnotationPresent(ExcelHeader.class)) {
-			ExcelHeader excelHeader = clazz.getAnnotation(ExcelHeader.class) ;
-			results.put("headerName", excelHeader.headerName()) ;
-		}
-		
-		// 保存警告信息
-		if(clazz.isAnnotationPresent(ExcelWarning.class)) {
-			ExcelWarning excelWarning = clazz.getAnnotation(ExcelWarning.class) ;
-			results.put("warningInfo", excelWarning.warningInfo()) ;
-		}
-		
-		// 保存列头信息
-		List<CellColumnValue> list = new ArrayList<CellColumnValue>() ;
-		for(Field field : fields) {
-			if(field.isAnnotationPresent(ExcelColumn.class)) {
-				CellColumnValue cellColumnValue = new CellColumnValue() ;
-				ExcelColumn excelColumn = field.getAnnotation(ExcelColumn.class) ;
-				cellColumnValue.setColumnKey(field.getName());
-				if(excelColumn.columnName() == null || "".equals(excelColumn.columnName().trim())) {
-					cellColumnValue.setColumnValue(field.getName().toUpperCase());
-				} else {
-					cellColumnValue.setColumnValue(excelColumn.columnName());
-				}
-				list.add(cellColumnValue) ;
-			}
-		}
-		
+        Map<String, Object> results = excelDataResultMap(clazz) ;
 		// 大批量数据条件下的分割Sheet
-		String[] sheetResult = null ; 
-		if(isBigData) {
-			int size = appDatas.size() ;
-			int sheetNums = size % pageSize == 0 ? size / pageSize : (size / pageSize +1) ;
-			sheetResult = new String[sheetNums] ;
-			if(sheetNums > 1) {
-				for(int i = 0; i< sheetNums; i++) {
-					sheetResult[i] = ExcelManager.DEFAULT_SHEET_NAME + (i+1) ;
-				}
-			}
-		} else {
-			sheetResult = new String[]{ExcelManager.DEFAULT_SHEET_NAME+1} ;
-		}
+		String[] sheetResult = excelLimitSheet(appDatas, isBigData, pageSize, null);
 		
-		results.put("columnNames", list) ;
 		results.put("appDatas", appDatas) ;
 		results.put("sheetNames", sheetResult) ;
 		results.put("isBigData", isBigData) ;
 		results.put("pageSize", pageSize) ;
-		if(ExcelType.XLS.equals(excelType)) {
-			return ExcelManager.createExcelManager().exportContainErrorDataExcel_XLS(results, clazz) ;
-		} else if(ExcelType.XLSX.equals(excelType)) {
-			return ExcelManager.createExcelManager().exportContainErrorDataExcel_XLSX(results, clazz);
-		} else {
+
+		return createExcelErrorData(results, excelType, clazz) ;
+	}
+
+    /**
+     * 创建workbook,导出错误数据
+     * @return
+     */
+    private static final Workbook createExcelErrorData(Map<String, Object> results, ExcelType excelType, Class<?> clazz) {
+        if(ExcelType.XLS.equals(excelType)) {
+            return ExcelManager.createExcelManager().exportContainErrorDataExcel_XLS(results, clazz) ;
+        } else if(ExcelType.XLSX.equals(excelType)) {
+            return ExcelManager.createExcelManager().exportContainErrorDataExcel_XLSX(results, clazz);
+        } else {
 			/*
 			 * 导出Excel应对一定量大数据策略2
 			 * 分页签Sheet导出海量数据
 			 * 导出数据后及时刷新内存
-			 * 
+			 *
 			 */
-			return ExcelManager.createExcelManager().exportContainErrorDataExcel_SXLSX(results, clazz) ;
-		}
-	}
+            return ExcelManager.createExcelManager().exportContainErrorDataExcel_SXLSX(results, clazz) ;
+        }
+    }
 	
 	/**
 	 * 
@@ -490,58 +455,16 @@ public class ExcelUtils {
 	 * @author zhangtian
 	 */
 	public static final Workbook exportErrorExcelData(List<?> appDatas, Class<?> clazz, ExcelType excelType, String sheetNames) {
-		
-		Map<String, Object> results = new HashMap<String, Object>() ;
-		Field[] fields = clazz.getDeclaredFields() ;
-		
-		// 保存标题
-		if(clazz.isAnnotationPresent(ExcelHeader.class)) {
-			ExcelHeader excelHeader = clazz.getAnnotation(ExcelHeader.class) ;
-			results.put("headerName", excelHeader.headerName()) ;
-		}
-		
-		// 保存警告信息
-		if(clazz.isAnnotationPresent(ExcelWarning.class)) {
-			ExcelWarning excelWarning = clazz.getAnnotation(ExcelWarning.class) ;
-			results.put("warningInfo", excelWarning.warningInfo()) ;
-		}
-		
-		// 保存列头信息
-		List<CellColumnValue> list = new ArrayList<CellColumnValue>() ;
-		for(Field field : fields) {
-			if(field.isAnnotationPresent(ExcelColumn.class)) {
-				CellColumnValue cellColumnValue = new CellColumnValue() ;
-				ExcelColumn excelColumn = field.getAnnotation(ExcelColumn.class) ;
-				cellColumnValue.setColumnKey(field.getName());
-				if(excelColumn.columnName() == null || "".equals(excelColumn.columnName().trim())) {
-					cellColumnValue.setColumnValue(field.getName().toUpperCase());
-				} else {
-					cellColumnValue.setColumnValue(excelColumn.columnName());
-				}
-				list.add(cellColumnValue) ;
-			}
-		}
-		
+		Map<String, Object> results = excelDataResultMap(clazz) ;
 		// 大批量数据条件下的分割Sheet
-		String[] sheetResult = new String[] {sheetNames} ;
-		results.put("columnNames", list) ;
+		String[] sheetResult = excelLimitSheet(appDatas, false, 0, sheetNames);
+
 		results.put("appDatas", appDatas) ;
 		results.put("sheetNames", sheetResult) ;
 		results.put("isBigData", false) ;
 		results.put("pageSize", 0) ;
-		if(ExcelType.XLS.equals(excelType)) {
-			return ExcelManager.createExcelManager().exportContainErrorDataExcel_XLS(results, clazz) ;
-		} else if(ExcelType.XLSX.equals(excelType)) {
-			return ExcelManager.createExcelManager().exportContainErrorDataExcel_XLSX(results, clazz);
-		} else {
-			/*
-			 * 导出Excel应对一定量大数据策略2
-			 * 分页签Sheet导出海量数据
-			 * 导出数据后及时刷新内存
-			 * 
-			 */
-			return ExcelManager.createExcelManager().exportContainErrorDataExcel_SXLSX(results, clazz) ;
-		}
+
+        return createExcelErrorData(results, excelType, clazz) ;
 	}
 
 	/**
