@@ -62,53 +62,10 @@ public class ExcelUtils {
 	 * @author zhangtian
 	 */
 	private static final Workbook exportExcelDataData(Workbook workbook, List<?> appDatas, Class<?> clazz, ExcelType excelType, boolean isBigData, int pageSize) {
-		Map<String, Object> results = new HashMap<String, Object>() ;
-		Field[] fields = clazz.getDeclaredFields() ;
-
-		// 保存标题
-		if(clazz.isAnnotationPresent(ExcelHeader.class)) {
-			ExcelHeader excelHeader = clazz.getAnnotation(ExcelHeader.class) ;
-			results.put("headerName", excelHeader.headerName()) ;
-		}
-
-		// 保存警告信息
-		if(clazz.isAnnotationPresent(ExcelWarning.class)) {
-			ExcelWarning excelWarning = clazz.getAnnotation(ExcelWarning.class) ;
-			results.put("warningInfo", excelWarning.warningInfo()) ;
-		}
-
-		// 保存列头信息
-		List<CellColumnValue> list = new ArrayList<CellColumnValue>() ;
-		for(Field field : fields) {
-			if(field.isAnnotationPresent(ExcelColumn.class)) {
-				CellColumnValue cellColumnValue = new CellColumnValue() ;
-				ExcelColumn excelColumn = field.getAnnotation(ExcelColumn.class) ;
-				cellColumnValue.setColumnKey(field.getName());
-				if(excelColumn.columnName() == null || "".equals(excelColumn.columnName().trim())) {
-					cellColumnValue.setColumnValue(field.getName().toUpperCase());
-				} else {
-					cellColumnValue.setColumnValue(excelColumn.columnName());
-				}
-				list.add(cellColumnValue) ;
-			}
-		}
-
+        Map<String, Object> results = excelDataResultMap(clazz) ;
 		// 大批量数据条件下的分割Sheet
-		String[] sheetResult = null ;
-		if(isBigData) {
-			int size = appDatas.size() ;
-			int sheetNums = size % pageSize == 0 ? size / pageSize : (size / pageSize +1) ;
-			sheetResult = new String[sheetNums] ;
-			if(sheetNums > 1) {
-				for(int i = 0; i< sheetNums; i++) {
-					sheetResult[i] = ExcelManager.DEFAULT_SHEET_NAME + (i+1) ;
-				}
-			}
-		} else {
-			sheetResult = new String[]{ExcelManager.DEFAULT_SHEET_NAME+1} ;
-		}
+		String[] sheetResult = excelLimitSheet(appDatas, isBigData, pageSize, null) ;
 
-		results.put("columnNames", list) ;
 		results.put("appDatas", appDatas) ;
 		results.put("sheetNames", sheetResult) ;
 		results.put("isBigData", isBigData) ;
@@ -128,6 +85,32 @@ public class ExcelUtils {
 			return ExcelManager.createExcelManager().exportContainDataExcel_SXLSX(results, clazz) ;
 		}
 	}
+
+    /**
+     * 拆分sheet
+     * @return
+     */
+	private static final String[] excelLimitSheet(List<?> appDatas, boolean isBigData, int pageSize, String sheetNames) {
+        // 大批量数据条件下的分割Sheet
+        String[] sheetResult = null ;
+        if(isBigData) {
+            int size = appDatas.size() ;
+            int sheetNums = size % pageSize == 0 ? size / pageSize : (size / pageSize +1) ;
+            sheetResult = new String[sheetNums] ;
+            if(sheetNums > 1) {
+                for(int i = 0; i< sheetNums; i++) {
+                    sheetResult[i] = ExcelManager.DEFAULT_SHEET_NAME + (i+1) ;
+                }
+            }
+        } else {
+            if(!"".equals(sheetNames) && null != sheetNames) {
+                sheetResult = new String[] {sheetNames} ;
+            }else{
+                sheetResult = new String[]{ExcelManager.DEFAULT_SHEET_NAME+1} ;
+            }
+        }
+	    return sheetResult ;
+    }
 
 	/**
 	 * 向已有的workbook写数据
@@ -160,6 +143,46 @@ public class ExcelUtils {
 		return exportExcelDataData(null ,appDatas, clazz, excelType, sheetNames) ;
 	}
 
+    /**
+     * 重构map参数，传递excel导出的数据参数
+     * @return
+     */
+	private static final Map<String, Object> excelDataResultMap(Class<?> clazz) {
+        Map<String, Object> results = new HashMap<String, Object>() ;
+        Field[] fields = clazz.getDeclaredFields() ;
+
+        // 保存标题
+        if(clazz.isAnnotationPresent(ExcelHeader.class)) {
+            ExcelHeader excelHeader = clazz.getAnnotation(ExcelHeader.class) ;
+            results.put("headerName", excelHeader.headerName()) ;
+        }
+
+        // 保存警告信息
+        if(clazz.isAnnotationPresent(ExcelWarning.class)) {
+            ExcelWarning excelWarning = clazz.getAnnotation(ExcelWarning.class) ;
+            results.put("warningInfo", excelWarning.warningInfo()) ;
+        }
+
+        // 保存列头信息
+        List<CellColumnValue> list = new ArrayList<CellColumnValue>() ;
+        for(Field field : fields) {
+            if(field.isAnnotationPresent(ExcelColumn.class)) {
+                CellColumnValue cellColumnValue = new CellColumnValue() ;
+                ExcelColumn excelColumn = field.getAnnotation(ExcelColumn.class) ;
+                cellColumnValue.setColumnKey(field.getName());
+                if(excelColumn.columnName() == null || "".equals(excelColumn.columnName().trim())) {
+                    cellColumnValue.setColumnValue(field.getName().toUpperCase());
+                } else {
+                    cellColumnValue.setColumnValue(excelColumn.columnName());
+                }
+                list.add(cellColumnValue) ;
+            }
+        }
+        results.put("columnNames", list) ;
+
+	    return results ;
+    }
+
 	/**
 	 * 代码重构
 	 * getExcelModalInfo:(获取Excel的头部标题以及列头信息)
@@ -172,40 +195,9 @@ public class ExcelUtils {
 	 * @author zhangtian
 	 */
 	private static final Workbook exportExcelDataData(Workbook workbook ,List<?> appDatas, Class<?> clazz, ExcelType excelType, String sheetNames) {
-		Map<String, Object> results = new HashMap<String, Object>() ;
-		Field[] fields = clazz.getDeclaredFields() ;
-
-		// 保存标题
-		if(clazz.isAnnotationPresent(ExcelHeader.class)) {
-			ExcelHeader excelHeader = clazz.getAnnotation(ExcelHeader.class) ;
-			results.put("headerName", excelHeader.headerName()) ;
-		}
-
-		// 保存警告信息
-		if(clazz.isAnnotationPresent(ExcelWarning.class)) {
-			ExcelWarning excelWarning = clazz.getAnnotation(ExcelWarning.class) ;
-			results.put("warningInfo", excelWarning.warningInfo()) ;
-		}
-
-		// 保存列头信息
-		List<CellColumnValue> list = new ArrayList<CellColumnValue>() ;
-		for(Field field : fields) {
-			if(field.isAnnotationPresent(ExcelColumn.class)) {
-				CellColumnValue cellColumnValue = new CellColumnValue() ;
-				ExcelColumn excelColumn = field.getAnnotation(ExcelColumn.class) ;
-				cellColumnValue.setColumnKey(field.getName());
-				if(excelColumn.columnName() == null || "".equals(excelColumn.columnName().trim())) {
-					cellColumnValue.setColumnValue(field.getName().toUpperCase());
-				} else {
-					cellColumnValue.setColumnValue(excelColumn.columnName());
-				}
-				list.add(cellColumnValue) ;
-			}
-		}
-
+        Map<String, Object> results = excelDataResultMap(clazz) ;
 		// 大批量数据条件下的分割Sheet
-		String[] sheetResult = new String[] {sheetNames} ;
-		results.put("columnNames", list) ;
+		String[] sheetResult = excelLimitSheet(appDatas, false, 0, sheetNames) ;
 		results.put("appDatas", appDatas) ;
 		results.put("sheetNames", sheetResult) ;
 		results.put("isBigData", false) ;
