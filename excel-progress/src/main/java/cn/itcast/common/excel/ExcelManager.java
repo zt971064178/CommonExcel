@@ -74,7 +74,7 @@ public class ExcelManager {
 	/*
 	 * 获取HSSFWorkbook对象
 	 */
-	private HSSFWorkbook getHSSFWorkbook() {
+	protected HSSFWorkbook getHSSFWorkbook() {
 		return new HSSFWorkbook();
 	}
 	
@@ -840,11 +840,15 @@ public class ExcelManager {
 	// =========================================== 创建数据导入导出
 	// ===========================================
 	// === 导出Excel的表格
-	@SuppressWarnings({ "unchecked"})
 	protected Workbook exportContainDataExcel_XLS(Map<String, Object> results, Class<?> clazz) {
 		// ======================== 页签创建 ==========================
 		// === 获取HSSFWorkbook对象
-		workbook = getHSSFWorkbook();
+		if(results.get("oldWorkbook") != null) {
+			workbook = (Workbook) results.get("oldWorkbook") ;
+			results.remove("oldWorkbook") ;
+		}else {
+			workbook = getHSSFWorkbook();
+		}
 
 		String[] sheetNames = (String[]) results.get("sheetNames") ;
 		Sheet[] sheets = new Sheet[sheetNames.length] ;
@@ -892,7 +896,6 @@ public class ExcelManager {
 	}
 	
 	// === 导出Excel的表格
-	@SuppressWarnings({ "unchecked"})
 	protected Workbook exportContainDataExcel_XLSX(Map<String, Object> results, Class<?> clazz) {
 		// ======================== 页签创建 ==========================
 		// === 获取HSSFWorkbook对象

@@ -1,24 +1,17 @@
 package cn.itcast.common.excel.test;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import cn.itcast.common.excel.ExcelUtils;
+import cn.itcast.common.excel.constants.ExcelType;
+import cn.itcast.common.excel.model.ValueBean;
+import com.alibaba.fastjson.JSONObject;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.junit.Test;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-
-import org.apache.poi.ss.usermodel.Workbook;
-import org.junit.Test;
-
-import com.alibaba.fastjson.JSONObject;
-
-import cn.itcast.common.excel.ExcelUtils;
-import cn.itcast.common.excel.constants.ExcelType;
-import cn.itcast.common.excel.model.ValueBean;
 
 /**
  * ClassName: ExcelTest  
@@ -134,5 +127,49 @@ public class ExcelTest {
 		out.flush();
 		out.close(); 
 		workbook.close();
+	}
+
+	/**
+	 * 测试自定义获取workbook对象，再重新操作
+	 */
+	@Test
+	public void testMyDefine() throws IOException {
+		InputStream in = new FileInputStream("C:\\Users\\zhangtian\\Desktop\\demoError.xls") ;
+		Workbook workbook = ExcelUtils.getWorkbook(ExcelType.XLS, in) ;
+
+		BaseUser u1 = new BaseUser() ;
+		u1.setId(UUID.randomUUID().toString());
+		u1.setUsername("张田");
+		u1.setAddress("园区莲花五区");
+
+		BaseUser u2 = new BaseUser() ;
+		u2.setId(UUID.randomUUID().toString());
+		u2.setUsername("小静静");
+		u2.setAddress("崇明岛主");
+
+		BaseUser u3 = new BaseUser() ;
+		u3.setId(UUID.randomUUID().toString());
+		u3.setUsername("王刚");
+		u3.setAddress("阳澄湖岛主");
+
+		List<BaseUser> appDatas = new ArrayList<BaseUser>() ;
+		appDatas.add(u1) ;
+		appDatas.add(u2) ;
+		appDatas.add(u3) ;
+		for(int i = 0; i < 100; i++) {
+			BaseUser u = new BaseUser() ;
+			u.setId(UUID.randomUUID().toString());
+			u.setUsername("Demo"+(i+1));
+			u.setAddress("阳澄湖岛主"+i);
+			appDatas.add(u) ;
+		}
+
+		workbook = ExcelUtils.exportExcelDataToOldWorkbook(workbook, appDatas, BaseUser.class, ExcelType.XLS, "zhangsan") ;
+		OutputStream out = new FileOutputStream(new File("C:\\Users\\zhangtian\\Desktop\\demoError.xls")) ;
+		workbook.write(out);
+		out.flush();
+		out.close();
+		workbook.close();
+
 	}
 }
