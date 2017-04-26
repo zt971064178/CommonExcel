@@ -71,20 +71,29 @@ public class ExcelUtils {
 		results.put("isBigData", isBigData) ;
 		results.put("pageSize", pageSize) ;
 		results.put("oldWorkbook", workbook) ;
-		if(ExcelType.XLS.equals(excelType)) {
-			return ExcelManager.createExcelManager().exportContainDataExcel_XLS(results, clazz) ;
-		} else if(ExcelType.XLSX.equals(excelType)) {
-			return ExcelManager.createExcelManager().exportContainDataExcel_XLSX(results, clazz);
-		} else {
+
+		return createExcelData(results, excelType, clazz) ;
+	}
+
+    /**
+     * 创建workbook,导出数据
+     * @return
+     */
+	private static final Workbook createExcelData(Map<String, Object> results, ExcelType excelType, Class<?> clazz) {
+        if(ExcelType.XLS.equals(excelType)) {
+            return ExcelManager.createExcelManager().exportContainDataExcel_XLS(results, clazz) ;
+        } else if(ExcelType.XLSX.equals(excelType)) {
+            return ExcelManager.createExcelManager().exportContainDataExcel_XLSX(results, clazz);
+        } else {
 			/*
 			 * 导出Excel应对一定量大数据策略2
 			 * 分页签Sheet导出海量数据
 			 * 导出数据后及时刷新内存
 			 *
 			 */
-			return ExcelManager.createExcelManager().exportContainDataExcel_SXLSX(results, clazz) ;
-		}
-	}
+            return ExcelManager.createExcelManager().exportContainDataExcel_SXLSX(results, clazz) ;
+        }
+    }
 
     /**
      * 拆分sheet
@@ -203,19 +212,8 @@ public class ExcelUtils {
 		results.put("isBigData", false) ;
 		results.put("pageSize", 0) ;
 		results.put("oldWorkbook", workbook) ;
-		if(ExcelType.XLS.equals(excelType)) {
-			return ExcelManager.createExcelManager().exportContainDataExcel_XLS(results, clazz) ;
-		} else if(ExcelType.XLSX.equals(excelType)) {
-			return ExcelManager.createExcelManager().exportContainDataExcel_XLSX(results, clazz);
-		} else {
-			/*
-			 * 导出Excel应对一定量大数据策略2
-			 * 分页签Sheet导出海量数据
-			 * 导出数据后及时刷新内存
-			 *
-			 */
-			return ExcelManager.createExcelManager().exportContainDataExcel_SXLSX(results, clazz) ;
-		}
+
+        return createExcelData(results, excelType, clazz) ;
 	}
 
 	/**
