@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import cn.itcast.common.excel.constants.ExcelType;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.poi.hssf.usermodel.HSSFCell;
@@ -841,84 +842,44 @@ public class ExcelManager {
 	// ===========================================
 	// === 导出Excel的表格
 	protected Workbook exportContainDataExcel_XLS(Map<String, Object> results, Class<?> clazz) {
+		return exportContainDataExcel(results, clazz, ExcelType.XLS) ;
+	}
+	
+	// === 导出Excel的表格
+	protected Workbook exportContainDataExcel_XLSX(Map<String, Object> results, Class<?> clazz) {
+		return exportContainDataExcel(results, clazz, ExcelType.XLSX) ;
+	}
+	
+	// === 导出Excel的表格
+	protected Workbook exportContainDataExcel_SXLSX(Map<String, Object> results, Class<?> clazz) {
+		return exportContainDataExcel(results, clazz, ExcelType.OTHER) ;
+	}
+
+	// 导出Excel数据方法重构
+	private Workbook exportContainDataExcel(Map<String, Object> results, Class<?> clazz, ExcelType excelType) {
 		// ======================== 页签创建 ==========================
 		// === 获取HSSFWorkbook对象
 		if(results.get("oldWorkbook") != null) {
 			workbook = (Workbook) results.get("oldWorkbook") ;
 			results.remove("oldWorkbook") ;
 		}else {
-			workbook = getHSSFWorkbook();
+			if(ExcelType.XLS.equals(excelType)) {
+				workbook = getHSSFWorkbook() ;
+			}else if(ExcelType.XLSX.equals(excelType)) {
+				workbook = getXSSFWorkbook() ;
+			}else {
+				workbook = getSXSSFWorkbook();
+			}
 		}
 
 		String[] sheetNames = (String[]) results.get("sheetNames") ;
 		Sheet[] sheets = new Sheet[sheetNames.length] ;
 		for(int i = 0; i<sheetNames.length; i++) {
-		    // 导入之前删除已经存在的sheet
-		    int sheetIndex = workbook.getSheetIndex(sheetNames[i]) ;
-            if(sheetIndex >= 0){
-                workbook.removeSheetAt(sheetIndex);
-            }
-            sheets[i] = workbook.createSheet(sheetNames[i]);
-		}
-		// ========================= 样式设置 =========================
-		// === 设置表头样式
-		setHeaderCellStyles(workbook);
-		// 设置警告信息样式
-		setWarnerCellStyles(workbook);
-		// === 设置列头样式
-		setTitleCellStyles(workbook);
-		// === 设置数据样式
-		setDataCellStyles(workbook);
-
-		// ========================= 数据创建 ==========================
-		// === 创建标题数据
-		int startFlag = 0 ;
-		if(results.get("headerName") != null) {
-			createAppRowHeaderData(results.get("headerName").toString(),startFlag,((List<String>) results.get("columnNames")).size(), sheets);
-			startFlag++ ;
-		}
-		
-		// 创建警告头信息
-		if(results.get("warningInfo") != null) {
-			createAppWaringData((String[])results.get("warningInfo"),startFlag, ((List<String>) results.get("columnNames")).size(),sheets) ;
-			startFlag++ ;
-		}
-		
-		// === 创建列头数据信息
-		if(results.get("columnNames") != null) {
-			createAppRowCellHeaderData(startFlag, (List<CellColumnValue>) results.get("columnNames"), clazz, sheets);
-			startFlag++ ;
-		}
-		// === 为空模板创建初始化数据 空数据样式
-		createAppRowHasData(startFlag, (List<Object>) results.get("appDatas"), clazz,
-				((List<String>) results.get("columnNames")).size(),(boolean)results.get("isBigData"), 
-				(int)results.get("pageSize"),sheets);
-		return workbook;
-		// ========================= 文件输出 ==========================
-		// FileOutputStream out = new FileOutputStream(filePath);
-		// workbook.write(out);
-		// out.close();
-	}
-	
-	// === 导出Excel的表格
-	protected Workbook exportContainDataExcel_XLSX(Map<String, Object> results, Class<?> clazz) {
-		// ======================== 页签创建 ==========================
-		// === 获取HSSFWorkbook对象
-        if(results.get("oldWorkbook") != null) {
-            workbook = (Workbook) results.get("oldWorkbook") ;
-            results.remove("oldWorkbook") ;
-        }else {
-            workbook = getXSSFWorkbook();
-        }
-
-		String[] sheetNames = (String[]) results.get("sheetNames") ;
-		Sheet[] sheets = new Sheet[sheetNames.length] ;
-		for(int i = 0; i<sheetNames.length; i++) {
-            // 导入之前删除已经存在的sheet
-            int sheetIndex = workbook.getSheetIndex(sheetNames[i]) ;
-            if(sheetIndex >= 0){
-                workbook.removeSheetAt(sheetIndex);
-            }
+			// 导入之前删除已经存在的sheet
+			int sheetIndex = workbook.getSheetIndex(sheetNames[i]) ;
+			if(sheetIndex >= 0){
+				workbook.removeSheetAt(sheetIndex);
+			}
 			sheets[i] = workbook.createSheet(sheetNames[i]);
 		}
 		// ========================= 样式设置 =========================
@@ -938,13 +899,13 @@ public class ExcelManager {
 			createAppRowHeaderData(results.get("headerName").toString(),startFlag,((List<String>) results.get("columnNames")).size(), sheets);
 			startFlag++ ;
 		}
-		
+
 		// 创建警告头信息
 		if(results.get("warningInfo") != null) {
 			createAppWaringData((String[])results.get("warningInfo"),startFlag, ((List<String>) results.get("columnNames")).size(),sheets) ;
 			startFlag++ ;
 		}
-		
+
 		// === 创建列头数据信息
 		if(results.get("columnNames") != null) {
 			createAppRowCellHeaderData(startFlag, (List<CellColumnValue>) results.get("columnNames"), clazz, sheets);
@@ -952,68 +913,7 @@ public class ExcelManager {
 		}
 		// === 为空模板创建初始化数据 空数据样式
 		createAppRowHasData(startFlag, (List<Object>) results.get("appDatas"), clazz,
-				((List<String>) results.get("columnNames")).size(),(boolean)results.get("isBigData"), 
-				(int)results.get("pageSize"),sheets);
-		return workbook;
-		// ========================= 文件输出 ==========================
-		// FileOutputStream out = new FileOutputStream(filePath);
-		// workbook.write(out);
-		// out.close();
-	}
-	
-	// === 导出Excel的表格
-	protected Workbook exportContainDataExcel_SXLSX(Map<String, Object> results, Class<?> clazz) {
-		// ======================== 页签创建 ==========================
-		// === 获取HSSFWorkbook对象
-        if(results.get("oldWorkbook") != null) {
-            workbook = (Workbook) results.get("oldWorkbook") ;
-            results.remove("oldWorkbook") ;
-        }else {
-            workbook = getSXSSFWorkbook();
-        }
-
-		String[] sheetNames = (String[]) results.get("sheetNames") ;
-		Sheet[] sheets = new Sheet[sheetNames.length] ;
-		for(int i = 0; i<sheetNames.length; i++) {
-            // 导入之前删除已经存在的sheet
-            int sheetIndex = workbook.getSheetIndex(sheetNames[i]) ;
-            if(sheetIndex >= 0){
-                workbook.removeSheetAt(sheetIndex);
-            }
-			sheets[i] = workbook.createSheet(sheetNames[i]);
-		}
-		// ========================= 样式设置 =========================
-		// === 设置表头样式
-		setHeaderCellStyles(workbook);
-		// 设置警告信息样式
-		setWarnerCellStyles(workbook);
-		// === 设置列头样式
-		setTitleCellStyles(workbook);
-		// === 设置数据样式
-		setDataCellStyles(workbook);
-
-		// ========================= 数据创建 ==========================
-		// === 创建标题数据
-		int startFlag = 0 ;
-		if(results.get("headerName") != null) {
-			createAppRowHeaderData(results.get("headerName").toString(),startFlag,((List<String>) results.get("columnNames")).size(), sheets);
-			startFlag++ ;
-		}
-		
-		// 创建警告头信息
-		if(results.get("warningInfo") != null) {
-			createAppWaringData((String[])results.get("warningInfo"),startFlag, ((List<String>) results.get("columnNames")).size(),sheets) ;
-			startFlag++ ;
-		}
-		
-		// === 创建列头数据信息
-		if(results.get("columnNames") != null) {
-			createAppRowCellHeaderData(startFlag, (List<CellColumnValue>) results.get("columnNames"), clazz, sheets);
-			startFlag++ ;
-		}
-		// === 为空模板创建初始化数据 空数据样式
-		createAppRowHasData(startFlag, (List<Object>) results.get("appDatas"), clazz,
-				((List<String>) results.get("columnNames")).size(),(boolean)results.get("isBigData"), 
+				((List<String>) results.get("columnNames")).size(),(boolean)results.get("isBigData"),
 				(int)results.get("pageSize"),sheets);
 		return workbook;
 		// ========================= 文件输出 ==========================
@@ -1025,163 +925,72 @@ public class ExcelManager {
 	// ======================================= Excel错误信息导出
 	// =======================================
 	// === 导出Excel的表格
-		protected Workbook exportContainErrorDataExcel_XLS(Map<String, Object> results, Class<?> clazz) {
-			// ======================== 页签创建 ==========================
-			// === 获取HSSFWorkbook对象
-			workbook = getHSSFWorkbook();
-
-			String[] sheetNames = (String[]) results.get("sheetNames") ;
-			Sheet[] sheets = new Sheet[sheetNames.length] ;
-			for(int i = 0; i<sheetNames.length; i++) {
-				sheets[i] = workbook.createSheet(sheetNames[i]);
-			}
-			// ========================= 样式设置 =========================
-			// === 设置表头样式
-			setHeaderCellStyles(workbook);
-			// 设置警告信息样式
-			setWarnerCellStyles(workbook);
-			// === 设置列头样式
-			setTitleCellStyles(workbook);
-			// === 设置数据样式
-			setDataCellStyles(workbook);
-			// === 错误数据样式
-			setErrorDataStyle(workbook);
-
-			// ========================= 数据创建 ==========================
-			// === 创建标题数据
-			int startFlag = 0 ;
-			if(results.get("headerName") != null) {
-				createAppRowHeaderData(results.get("headerName").toString(),startFlag,((List<String>) results.get("columnNames")).size(), sheets);
-				startFlag++ ;
-			}
-			
-			// 创建警告头信息
-			if(results.get("warningInfo") != null) {
-				createAppWaringData((String[])results.get("warningInfo"),startFlag, ((List<String>) results.get("columnNames")).size(),sheets) ;
-				startFlag++ ;
-			}
-			
-			// === 创建列头数据信息
-			if(results.get("columnNames") != null) {
-				createAppRowCellHeaderData(startFlag, (List<CellColumnValue>) results.get("columnNames"), clazz, sheets);
-				startFlag++ ;
-			}
-			// === 为空模板创建初始化数据 空数据样式
-			createAppRowHasErrorData(startFlag, (List<Object>) results.get("appDatas"), clazz,
-					((List<String>) results.get("columnNames")).size(),(boolean)results.get("isBigData"), 
-					(int)results.get("pageSize"),sheets);
-			return workbook;
-			// ========================= 文件输出 ==========================
-			// FileOutputStream out = new FileOutputStream(filePath);
-			// workbook.write(out);
-			// out.close();
-		}
+	protected Workbook exportContainErrorDataExcel_XLS(Map<String, Object> results, Class<?> clazz) {
+		return  exportContainErrorDataExcel(results, clazz, ExcelType.XLS) ;
+	}
 		
-		// === 导出Excel的表格
-		protected Workbook exportContainErrorDataExcel_XLSX(Map<String, Object> results, Class<?> clazz) {
-			// ======================== 页签创建 ==========================
-			// === 获取HSSFWorkbook对象
-			workbook = getXSSFWorkbook();
+	// === 导出Excel的表格
+	protected Workbook exportContainErrorDataExcel_XLSX(Map<String, Object> results, Class<?> clazz) {
+		return  exportContainErrorDataExcel(results, clazz, ExcelType.XLSX) ;
+	}
 
-			String[] sheetNames = (String[]) results.get("sheetNames") ;
-			Sheet[] sheets = new Sheet[sheetNames.length] ;
-			for(int i = 0; i<sheetNames.length; i++) {
-				sheets[i] = workbook.createSheet(sheetNames[i]);
-			}
-			// ========================= 样式设置 =========================
-			// === 设置表头样式
-			setHeaderCellStyles(workbook);
-			// 设置警告信息样式
-			setWarnerCellStyles(workbook);
-			// === 设置列头样式
-			setTitleCellStyles(workbook);
-			// === 设置数据样式
-			setDataCellStyles(workbook);
-			// === 设置错误数据样式
-			setErrorDataStyle(workbook);
+	// === 导出Excel的表格
+	protected Workbook exportContainErrorDataExcel_SXLSX(Map<String, Object> results, Class<?> clazz) {
+		return  exportContainErrorDataExcel(results, clazz, ExcelType.OTHER) ;
+	}
 
-			// ========================= 数据创建 ==========================
-			// === 创建标题数据
-			int startFlag = 0 ;
-			if(results.get("headerName") != null) {
-				createAppRowHeaderData(results.get("headerName").toString(),startFlag,((List<String>) results.get("columnNames")).size(), sheets);
-				startFlag++ ;
-			}
-			
-			// 创建警告头信息
-			if(results.get("warningInfo") != null) {
-				createAppWaringData((String[])results.get("warningInfo"),startFlag, ((List<String>) results.get("columnNames")).size(),sheets) ;
-				startFlag++ ;
-			}
-			
-			// === 创建列头数据信息
-			if(results.get("columnNames") != null) {
-				createAppRowCellHeaderData(startFlag, (List<CellColumnValue>) results.get("columnNames"), clazz, sheets);
-				startFlag++ ;
-			}
-			// === 为空模板创建初始化数据 空数据样式
-			createAppRowHasErrorData(startFlag, (List<Object>) results.get("appDatas"), clazz,
-					((List<String>) results.get("columnNames")).size(),(boolean)results.get("isBigData"), 
-					(int)results.get("pageSize"),sheets);
-			return workbook;
-			// ========================= 文件输出 ==========================
-			// FileOutputStream out = new FileOutputStream(filePath);
-			// workbook.write(out);
-			// out.close();
+	// 导出错误的Excel数据，代码重构
+	protected Workbook exportContainErrorDataExcel(Map<String, Object> results, Class<?> clazz, ExcelType excelType) {
+		// ======================== 页签创建 ==========================
+		// === 获取HSSFWorkbook对象
+		workbook = getSXSSFWorkbook();
+
+		String[] sheetNames = (String[]) results.get("sheetNames") ;
+		Sheet[] sheets = new Sheet[sheetNames.length] ;
+		for(int i = 0; i<sheetNames.length; i++) {
+			sheets[i] = workbook.createSheet(sheetNames[i]);
 		}
-		
-		// === 导出Excel的表格
-		protected Workbook exportContainErrorDataExcel_SXLSX(Map<String, Object> results, Class<?> clazz) {
-			// ======================== 页签创建 ==========================
-			// === 获取HSSFWorkbook对象
-			workbook = getSXSSFWorkbook();
+		// ========================= 样式设置 =========================
+		// === 设置表头样式
+		setHeaderCellStyles(workbook);
+		// 设置警告信息样式
+		setWarnerCellStyles(workbook);
+		// === 设置列头样式
+		setTitleCellStyles(workbook);
+		// === 设置数据样式
+		setDataCellStyles(workbook);
+		// === 设置错误数据样式
+		setErrorDataStyle(workbook);
 
-			String[] sheetNames = (String[]) results.get("sheetNames") ;
-			Sheet[] sheets = new Sheet[sheetNames.length] ;
-			for(int i = 0; i<sheetNames.length; i++) {
-				sheets[i] = workbook.createSheet(sheetNames[i]);
-			}
-			// ========================= 样式设置 =========================
-			// === 设置表头样式
-			setHeaderCellStyles(workbook);
-			// 设置警告信息样式
-			setWarnerCellStyles(workbook);
-			// === 设置列头样式
-			setTitleCellStyles(workbook);
-			// === 设置数据样式
-			setDataCellStyles(workbook);
-			// === 设置错误数据样式
-			setErrorDataStyle(workbook);
-
-			// ========================= 数据创建 ==========================
-			// === 创建标题数据
-			int startFlag = 0 ;
-			if(results.get("headerName") != null) {
-				createAppRowHeaderData(results.get("headerName").toString(),startFlag,((List<String>) results.get("columnNames")).size(), sheets);
-				startFlag++ ;
-			}
-			
-			// 创建警告头信息
-			if(results.get("warningInfo") != null) {
-				createAppWaringData((String[])results.get("warningInfo"),startFlag, ((List<String>) results.get("columnNames")).size(),sheets) ;
-				startFlag++ ;
-			}
-			
-			// === 创建列头数据信息
-			if(results.get("columnNames") != null) {
-				createAppRowCellHeaderData(startFlag, (List<CellColumnValue>) results.get("columnNames"), clazz, sheets);
-				startFlag++ ;
-			}
-			// === 为空模板创建初始化数据 空数据样式
-			createAppRowHasErrorData(startFlag, (List<Object>) results.get("appDatas"), clazz,
-					((List<String>) results.get("columnNames")).size(),(boolean)results.get("isBigData"), 
-					(int)results.get("pageSize"),sheets);
-			return workbook;
-			// ========================= 文件输出 ==========================
-			// FileOutputStream out = new FileOutputStream(filePath);
-			// workbook.write(out);
-			// out.close();
+		// ========================= 数据创建 ==========================
+		// === 创建标题数据
+		int startFlag = 0 ;
+		if(results.get("headerName") != null) {
+			createAppRowHeaderData(results.get("headerName").toString(),startFlag,((List<String>) results.get("columnNames")).size(), sheets);
+			startFlag++ ;
 		}
+
+		// 创建警告头信息
+		if(results.get("warningInfo") != null) {
+			createAppWaringData((String[])results.get("warningInfo"),startFlag, ((List<String>) results.get("columnNames")).size(),sheets) ;
+			startFlag++ ;
+		}
+
+		// === 创建列头数据信息
+		if(results.get("columnNames") != null) {
+			createAppRowCellHeaderData(startFlag, (List<CellColumnValue>) results.get("columnNames"), clazz, sheets);
+			startFlag++ ;
+		}
+		// === 为空模板创建初始化数据 空数据样式
+		createAppRowHasErrorData(startFlag, (List<Object>) results.get("appDatas"), clazz,
+				((List<String>) results.get("columnNames")).size(),(boolean)results.get("isBigData"),
+				(int)results.get("pageSize"),sheets);
+		return workbook;
+		// ========================= 文件输出 ==========================
+		// FileOutputStream out = new FileOutputStream(filePath);
+		// workbook.write(out);
+		// out.close();
+	}
 	
 	// ======================================= Excel数据导入
 	// =======================================
