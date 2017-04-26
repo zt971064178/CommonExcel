@@ -877,7 +877,7 @@ public class ExcelManager {
 		for(int i = 0; i<sheetNames.length; i++) {
 			// 导入之前删除已经存在的sheet
 			int sheetIndex = workbook.getSheetIndex(sheetNames[i]) ;
-			if(sheetIndex >= 0){
+            if(workbook.getSheet(sheetNames[i]) != null){
 				workbook.removeSheetAt(sheetIndex);
 			}
 			sheets[i] = workbook.createSheet(sheetNames[i]);
@@ -961,7 +961,7 @@ public class ExcelManager {
 		for(int i = 0; i<sheetNames.length; i++) {
             // 导入之前删除已经存在的sheet
             int sheetIndex = workbook.getSheetIndex(sheetNames[i]) ;
-            if(sheetIndex >= 0){
+            if(workbook.getSheet(sheetNames[i]) != null){
                 workbook.removeSheetAt(sheetIndex);
             }
 			sheets[i] = workbook.createSheet(sheetNames[i]);
