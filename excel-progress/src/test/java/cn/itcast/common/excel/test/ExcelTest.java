@@ -57,7 +57,7 @@ public class ExcelTest {
 		}
 		
 		long startTime = new Date().getTime() ;
-		Workbook workbook = ExcelUtils.exportExcelData(appDatas, BaseUser.class, ExcelType.OTHER, true, 2500) ;
+		Workbook workbook = ExcelUtils.exportExcelData(appDatas, BaseUser.class, ExcelType.XLSX, true, 2500) ;
 		OutputStream out = new FileOutputStream(new File("C:\\Users\\zhangtian\\Desktop\\demo11.xlsx")) ;
 		System.out.println(new Date().getTime() - startTime);
 		workbook.write(out);
@@ -164,7 +164,7 @@ public class ExcelTest {
 			appDatas.add(u) ;
 		}
 
-		workbook = ExcelUtils.exportExcelDataToOldWorkbook(workbook, appDatas, BaseUser.class, ExcelType.XLS, "zhangtian") ;
+		workbook = ExcelUtils.exportExcelDataToOldWorkbook(workbook, appDatas, BaseUser.class, ExcelType.XLS, "zhangtian1") ;
 		OutputStream out = new FileOutputStream(new File("C:\\Users\\zhangtian\\Desktop\\demoError.xls")) ;
 		workbook.write(out);
 		out.flush();

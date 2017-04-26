@@ -476,24 +476,37 @@ public class ExcelUtils {
 	public static final Workbook getWorkbook(ExcelType excelType, InputStream in) throws IOException {
 		ExcelManager excelManager = ExcelManager.createExcelManager() ;
 		Workbook workbook = null ;
-		if(ExcelType.XLS.equals(excelType)) {
-			if(in != null) {
-				POIFSFileSystem poifsFileSystem = new POIFSFileSystem(in) ;
-				workbook = excelManager.getHSSFWorkbook(poifsFileSystem) ;
-			}else{
-				workbook = excelManager.getHSSFWorkbook() ;
-			}
-		}else if(ExcelType.XLSX.equals(excelType)) {
-			if(in != null) {
-				workbook = excelManager.getXSSFWorkbook(in) ;
+		try {
+			if(ExcelType.XLS.equals(excelType)) {
+				if(in != null) {
+					POIFSFileSystem poifsFileSystem = null ;
+					try {
+						poifsFileSystem = new POIFSFileSystem(in) ;
+						workbook = excelManager.getHSSFWorkbook(poifsFileSystem) ;
+					} finally {
+						if(poifsFileSystem != null) {
+							poifsFileSystem.close();
+						}
+					}
+				}else{
+					workbook = excelManager.getHSSFWorkbook() ;
+				}
+			}else if(ExcelType.XLSX.equals(excelType)) {
+				if(in != null) {
+					workbook = excelManager.getXSSFWorkbook(in) ;
+				}else {
+					workbook = excelManager.getXSSFWorkbook() ;
+				}
 			}else {
-				workbook = excelManager.getXSSFWorkbook() ;
+				if(in != null) {
+					workbook = excelManager.getSXSSFWorkbook(in) ;
+				}else {
+					workbook = excelManager.getSXSSFWorkbook() ;
+				}
 			}
-		}else {
+		}finally {
 			if(in != null) {
-				workbook = excelManager.getSXSSFWorkbook(in) ;
-			}else {
-				workbook = excelManager.getSXSSFWorkbook() ;
+				in.close();
 			}
 		}
 
