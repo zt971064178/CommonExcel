@@ -382,7 +382,7 @@ public class ExcelUtils {
 		int sheetNum = workbook.getNumberOfSheets() ;
 		for(int index : sheetIndexes) {
 			if((index+1) > sheetNum) {
-				throw new RuntimeException("Sheet页签下表越界......") ;
+				throw new RuntimeException("Sheet页签下标越界......") ;
 			}
 			continue ;
 		}
