@@ -170,6 +170,5 @@ public class ExcelTest {
 		out.flush();
 		out.close();
 		workbook.close();
-
 	}
 }
