@@ -1025,7 +1025,6 @@ public class ExcelManager {
 	// ======================================= Excel错误信息导出
 	// =======================================
 	// === 导出Excel的表格
-		@SuppressWarnings({ "unchecked"})
 		protected Workbook exportContainErrorDataExcel_XLS(Map<String, Object> results, Class<?> clazz) {
 			// ======================== 页签创建 ==========================
 			// === 获取HSSFWorkbook对象
@@ -1079,7 +1078,6 @@ public class ExcelManager {
 		}
 		
 		// === 导出Excel的表格
-		@SuppressWarnings({ "unchecked"})
 		protected Workbook exportContainErrorDataExcel_XLSX(Map<String, Object> results, Class<?> clazz) {
 			// ======================== 页签创建 ==========================
 			// === 获取HSSFWorkbook对象
@@ -1133,7 +1131,6 @@ public class ExcelManager {
 		}
 		
 		// === 导出Excel的表格
-		@SuppressWarnings({ "unchecked"})
 		protected Workbook exportContainErrorDataExcel_SXLSX(Map<String, Object> results, Class<?> clazz) {
 			// ======================== 页签创建 ==========================
 			// === 获取HSSFWorkbook对象
