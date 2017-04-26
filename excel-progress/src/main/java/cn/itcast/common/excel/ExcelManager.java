@@ -853,7 +853,12 @@ public class ExcelManager {
 		String[] sheetNames = (String[]) results.get("sheetNames") ;
 		Sheet[] sheets = new Sheet[sheetNames.length] ;
 		for(int i = 0; i<sheetNames.length; i++) {
-			sheets[i] = workbook.createSheet(sheetNames[i]);
+		    // 导入之前删除已经存在的sheet
+		    int sheetIndex = workbook.getSheetIndex(sheetNames[i]) ;
+            if(sheetIndex >= 0){
+                workbook.removeSheetAt(sheetIndex);
+            }
+            sheets[i] = workbook.createSheet(sheetNames[i]);
 		}
 		// ========================= 样式设置 =========================
 		// === 设置表头样式
@@ -909,6 +914,11 @@ public class ExcelManager {
 		String[] sheetNames = (String[]) results.get("sheetNames") ;
 		Sheet[] sheets = new Sheet[sheetNames.length] ;
 		for(int i = 0; i<sheetNames.length; i++) {
+            // 导入之前删除已经存在的sheet
+            int sheetIndex = workbook.getSheetIndex(sheetNames[i]) ;
+            if(sheetIndex >= 0){
+                workbook.removeSheetAt(sheetIndex);
+            }
 			sheets[i] = workbook.createSheet(sheetNames[i]);
 		}
 		// ========================= 样式设置 =========================
@@ -966,6 +976,11 @@ public class ExcelManager {
 		String[] sheetNames = (String[]) results.get("sheetNames") ;
 		Sheet[] sheets = new Sheet[sheetNames.length] ;
 		for(int i = 0; i<sheetNames.length; i++) {
+            // 导入之前删除已经存在的sheet
+            int sheetIndex = workbook.getSheetIndex(sheetNames[i]) ;
+            if(sheetIndex >= 0){
+                workbook.removeSheetAt(sheetIndex);
+            }
 			sheets[i] = workbook.createSheet(sheetNames[i]);
 		}
 		// ========================= 样式设置 =========================

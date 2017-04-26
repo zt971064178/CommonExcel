@@ -164,7 +164,7 @@ public class ExcelTest {
 			appDatas.add(u) ;
 		}
 
-		workbook = ExcelUtils.exportExcelDataToOldWorkbook(workbook, appDatas, BaseUser.class, ExcelType.XLS, "zhangsan") ;
+		workbook = ExcelUtils.exportExcelDataToOldWorkbook(workbook, appDatas, BaseUser.class, ExcelType.XLS, "zhangtian") ;
 		OutputStream out = new FileOutputStream(new File("C:\\Users\\zhangtian\\Desktop\\demoError.xls")) ;
 		workbook.write(out);
 		out.flush();
