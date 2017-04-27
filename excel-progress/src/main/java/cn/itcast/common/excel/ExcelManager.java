@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import cn.itcast.common.excel.constants.ExcelType;
+import com.sun.org.apache.xerces.internal.xs.datatypes.ObjectList;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.poi.hssf.usermodel.HSSFCell;
@@ -641,6 +642,131 @@ public class ExcelManager {
 			}
 		}
 	}
+
+	/*
+	 * 创建虚拟行数据
+	 */
+	private void createAppRowHasVirtualData(int startFlag, List<Object> appData, Class<?> clazz, Integer cellHeaderNum,boolean isBigData, int pageSize, Sheet... sheets) {
+
+		Row row = null;
+		Cell cellAppDataCell = null;
+		ExcelColumn excelColumn = null;
+		if (cellHeaderNum != 0) {
+			if(CollectionUtils.isNotEmpty(appData)) {
+				if(isBigData) {
+					int totalSize = appData.size() ;
+					int start = 0 ;
+					pageSize = pageSize >= totalSize ? totalSize : pageSize ;
+					int end = pageSize ;
+					for(Sheet sheet : sheets) {
+						System.out.println(start+"===>"+end);
+						// === 行记录数
+						int k = 0 ;
+						for (int i = start; i < end; i++) {
+							// === 列记录数
+							row = sheet.createRow(k+startFlag);
+							k++;
+							Object o = appData.get(i);
+							Field[] fields = o.getClass().getDeclaredFields();
+							int j = 0;
+							for (Field field : fields) {
+								if (field.isAnnotationPresent(ExcelColumn.class)) {
+									field.setAccessible(true);
+									excelColumn = field.getAnnotation(ExcelColumn.class);
+									try {
+										cellAppDataCell = row.createCell(j);
+										if(StringUtils.equals(excelColumn.autoIncrement(), "Y")){
+											if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+												cellAppDataCell.setCellValue(new HSSFRichTextString((k+1)+""));
+											} else {
+												cellAppDataCell.setCellValue(new XSSFRichTextString((k+1)+""));
+											}
+										}else{
+											Object value = field.get(o);
+											if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+												if (value != null) {
+													cellAppDataCell.setCellValue(new HSSFRichTextString(
+															cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(value.toString())));
+												} else {
+													cellAppDataCell.setCellValue(new HSSFRichTextString(""));
+												}
+											} else {
+												if (value != null) {
+													cellAppDataCell.setCellValue(new XSSFRichTextString(
+															cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(value.toString())));
+												} else {
+													cellAppDataCell.setCellValue(new XSSFRichTextString(""));
+												}
+											}
+
+										}
+										cellAppDataCell.setCellStyle(titleStyle);
+										j++;
+									} catch (Exception e) {
+										e.printStackTrace();
+									}
+								}
+							}
+						}
+
+						start = start + pageSize ;
+						end = end + pageSize ;
+						if(end >= totalSize) {
+							end = totalSize ;
+						}
+					}
+				} else {
+					for(Sheet sheet : sheets) {
+						// === 行记录数
+						for (int i = 0; i < appData.size(); i++) {
+							// === 列记录数
+							row = sheet.createRow(i + startFlag);
+							Object o = appData.get(i);
+							Field[] fields = o.getClass().getDeclaredFields();
+							int j = 0;
+							for (Field field : fields) {
+								if (field.isAnnotationPresent(ExcelColumn.class)) {
+									field.setAccessible(true);
+									excelColumn = field.getAnnotation(ExcelColumn.class);
+									try {
+										cellAppDataCell = row.createCell(j);
+										if(StringUtils.equals(excelColumn.autoIncrement(), "Y")){
+											if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+												cellAppDataCell.setCellValue(new HSSFRichTextString((i+1)+""));
+											} else {
+												cellAppDataCell.setCellValue(new XSSFRichTextString((i+1)+""));
+											}
+										}else{
+											Object value = field.get(o);
+											if(sheet.getWorkbook().getClass().isAssignableFrom(HSSFWorkbook.class)) {
+												if (value != null) {
+													cellAppDataCell.setCellValue(new HSSFRichTextString(
+															cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(value.toString())));
+												} else {
+													cellAppDataCell.setCellValue(new HSSFRichTextString(""));
+												}
+											} else {
+												if (value != null) {
+													cellAppDataCell.setCellValue(new XSSFRichTextString(
+															cn.itcast.common.excel.utils.StringUtils.replaceEscapeChar(value.toString())));
+												} else {
+													cellAppDataCell.setCellValue(new XSSFRichTextString(""));
+												}
+											}
+										}
+										cellAppDataCell.setCellStyle(titleStyle);
+										j++;
+									} catch (Exception e) {
+										e.printStackTrace();
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 	
 	/*
 	 * 创建错误数据
@@ -837,14 +963,116 @@ public class ExcelManager {
 			}
 		}
 	}
-	
+
+	// =========================================== 数据导出，虚拟行，一键多值，导出一行对应多行的数据，数据模型为List<Map<Object,List<Object>>> datas = new ArrayList<Map<Object,List<Object>>>() ;
+	// ======================================
+	// ====================================== 导出Excel的表格
+	protected Workbook exportVirtualRollDataExcel_XLS(Map<String, Object> results, Map<String, Class<?>> clazzs) {
+		return exportVirtualRollDataExcel(results, clazzs, ExcelType.XLS) ;
+	}
+
+	// ====================================== 导出Excel的表格
+	protected Workbook exportVirtualRollDataExcel_XLSX(Map<String, Object> results, Map<String, Class<?>> clazzs) {
+		return exportVirtualRollDataExcel(results, clazzs, ExcelType.XLSX) ;
+	}
+
+	// ====================================== 导出Excel的表格
+	protected Workbook exportVirtualRollDataExcel_SXLSX(Map<String, Object> results, Map<String, Class<?>> clazzs) {
+		return exportVirtualRollDataExcel(results, clazzs, ExcelType.OTHER) ;
+	}
+
+	// 公用Excel数据组装
+	private Workbook exportVirtualRollDataExcel(Map<String, Object> results, Map<String, Class<?>> clazzs, ExcelType excelType) {
+		if(results.get("oldWorkbook") != null) {
+			workbook = (Workbook) results.get("oldWorkbook") ;
+			results.remove("oldWorkbook") ;
+		}else {
+			if(ExcelType.XLS.equals(excelType)) {
+				workbook = getHSSFWorkbook() ;
+			}else if(ExcelType.XLSX.equals(excelType)) {
+				workbook = getXSSFWorkbook() ;
+			}else {
+				workbook = getSXSSFWorkbook();
+			}
+		}
+
+		String[] sheetNames = (String[]) results.get("sheetNames") ;
+		Sheet[] sheets = new Sheet[sheetNames.length] ;
+		for(int i = 0; i<sheetNames.length; i++) {
+			// 导入之前删除已经存在的sheet
+			int sheetIndex = workbook.getSheetIndex(sheetNames[i]) ;
+			if(workbook.getSheet(sheetNames[i]) != null){
+				workbook.removeSheetAt(sheetIndex);
+			}
+			sheets[i] = workbook.createSheet(sheetNames[i]);
+		}
+
+		// ========================= 样式设置 =========================
+		// === 设置表头样式
+		setHeaderCellStyles(workbook);
+		// 设置警告信息样式
+		setWarnerCellStyles(workbook);
+		// === 设置列头样式
+		setTitleCellStyles(workbook);
+		// === 设置数据样式
+		setDataCellStyles(workbook);
+
+		// ========================= 数据创建 ==========================
+		// 其中标题数据、警告头数据、列头数据来源均取之于键对象
+		// === 创建标题数据
+		int startFlag = 0 ;
+		if(results.get("headerName") != null) {
+			createAppRowHeaderData(results.get("headerName").toString(),startFlag,((List<String>) results.get("columnNames")).size(), sheets);
+			startFlag++ ;
+		}
+
+		// 创建警告头信息
+		if(results.get("warningInfo") != null) {
+			createAppWaringData((String[])results.get("warningInfo"),startFlag, ((List<String>) results.get("columnNames")).size(),sheets) ;
+			startFlag++ ;
+		}
+
+		// === 创建列头数据信息
+		if(results.get("columnNames") != null) {
+			createAppRowCellHeaderData(startFlag, (List<CellColumnValue>) results.get("columnNames"), clazzs.get("keyClass"), sheets);
+			startFlag++ ;
+		}
+
+		// 写入Excel数据部分，以最小代价写入
+		List<Map<Object,List<Object>>> datas = (List<Map<Object,List<Object>>>) results.get("appDatas") ;
+		if(CollectionUtils.isNotEmpty(datas)) {
+			for(Map<Object,List<Object>> map : datas) {
+				List<Object> tempList = new ArrayList<Object>() ;
+				for(Map.Entry<Object, List<Object>> entry : map.entrySet()) {
+					tempList.add(entry.getKey()) ;
+					// === 为空模板创建初始化数据 空数据样式
+					createAppRowHasVirtualData(startFlag, tempList, clazzs.get("keyClass"),
+							((List<String>) results.get("columnNames")).size(),(boolean)results.get("isBigData"),
+							(int)results.get("pageSize"),sheets);
+					startFlag++ ;
+
+					createAppRowHasData(startFlag, entry.getValue(), clazzs.get("valueClass"),
+							((List<String>) results.get("columnNames")).size(),(boolean)results.get("isBigData"),
+							(int)results.get("pageSize"),sheets);
+					startFlag += entry.getValue().size() ;
+				}
+			}
+		}
+
+		return workbook;
+		// ========================= 文件输出 ==========================
+		// FileOutputStream out = new FileOutputStream(filePath);
+		// workbook.write(out);
+		// out.close();
+	}
+
 	// =========================================== 创建数据导入导出
 	// ===========================================
 	// === 导出Excel的表格
 	protected Workbook exportContainDataExcel_XLS(Map<String, Object> results, Class<?> clazz) {
 		return exportContainDataExcel(results, clazz, ExcelType.XLS) ;
 	}
-	
+
 	// === 导出Excel的表格
 	protected Workbook exportContainDataExcel_XLSX(Map<String, Object> results, Class<?> clazz) {
 		return exportContainDataExcel(results, clazz, ExcelType.XLSX) ;

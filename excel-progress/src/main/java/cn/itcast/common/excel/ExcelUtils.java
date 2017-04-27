@@ -1,27 +1,24 @@
 package cn.itcast.common.excel;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.poi.POIXMLDocument;
-import org.apache.poi.poifs.filesystem.POIFSFileSystem;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-
 import cn.itcast.common.excel.annotation.ExcelColumn;
 import cn.itcast.common.excel.annotation.ExcelHeader;
 import cn.itcast.common.excel.annotation.ExcelWarning;
 import cn.itcast.common.excel.constants.ExcelType;
 import cn.itcast.common.excel.model.CellColumnValue;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.ListUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.*;
 
 /**
  * ClassName: ExcelUtils  
@@ -96,6 +93,29 @@ public class ExcelUtils {
         }
     }
 
+	/**
+	 * 创建workbook,导出数据
+	 * @param results
+	 * @param excelType
+	 * @param clazzs
+	 * @return
+	 */
+	private static final Workbook createVirtualRowExcelData(Map<String, Object> results, ExcelType excelType, Map<String, Class<?>> clazzs) {
+		if(ExcelType.XLS.equals(excelType)) {
+			return ExcelManager.createExcelManager().exportVirtualRollDataExcel_XLS(results, clazzs) ;
+		} else if(ExcelType.XLSX.equals(excelType)) {
+			return ExcelManager.createExcelManager().exportVirtualRollDataExcel_XLSX(results, clazzs) ;
+		} else {
+			/*
+			 * 导出Excel应对一定量大数据策略2
+			 * 分页签Sheet导出海量数据
+			 * 导出数据后及时刷新内存
+			 *
+			 */
+			return ExcelManager.createExcelManager().exportVirtualRollDataExcel_SXLSX(results, clazzs) ;
+		}
+	}
+
     /**
      * 拆分sheet
      * @return
@@ -151,6 +171,62 @@ public class ExcelUtils {
 	 */
 	public static final Workbook exportExcelData(List<?> appDatas, Class<?> clazz, ExcelType excelType, String sheetNames) {
 		return exportExcelDataData(null ,appDatas, clazz, excelType, sheetNames) ;
+	}
+
+	/**
+	 * 数据导出，虚拟行，一键多值，导出一行对应多行的数据，数据模型为List<Map<Object,List<Object>>> datas = new ArrayList<Map<Object,List<Object>>>() ;
+	 * @param datas
+	 * @param clazzs
+	 * @param excelType
+	 * @param sheetNames
+	 * @return
+	 */
+	public static final Workbook exportVirtualRowExcelData(List<Map<Object,List<Object>>> datas, ExcelType excelType, String sheetNames) {
+		Map<String, Class<?>> clazzs = new HashMap<String, Class<?>>() ;
+		// 根据spring核心包，获取参数泛型类型
+		if(!CollectionUtils.isEmpty(datas)) {
+			Map<Object, List<Object>> map0 = datas.get(0) ;
+			if(MapUtils.isNotEmpty(map0)) {
+				for(Map.Entry<Object, List<Object>> entry : map0.entrySet()) {
+					Object key = entry.getKey() ;
+					clazzs.put("keyClass", key.getClass()) ;
+					List<Object> list = entry.getValue() ;
+					if(CollectionUtils.isNotEmpty(list)) {
+						Object value = list.get(0) ;
+						clazzs.put("valueClass", value.getClass()) ;
+					}else {
+						clazzs.put("valueClass", null) ;
+					}
+				}
+				return exportVirtualRowExcelDataData(null ,datas, clazzs, excelType, sheetNames) ;
+			} else {
+				return null ;
+			}
+		} else {
+			return null ;
+		}
+	}
+
+	/**
+	 * 数据导出，虚拟行，一键多值
+	 * @param workbook
+	 * @param appDatas
+	 * @param clazz
+	 * @param excelType
+	 * @param sheetNames
+	 * @return
+	 */
+	private static final Workbook exportVirtualRowExcelDataData(Workbook workbook, List<Map<Object,List<Object>>> datas, Map<String, Class<?>> clazzs, ExcelType excelType, String sheetNames) {
+		Map<String, Object> results = excelDataResultMap(clazzs.get("keyClass")) ;
+		// 大批量数据条件下的分割Sheet
+		String[] sheetResult = excelLimitSheet(datas, false, 0, sheetNames) ;
+		results.put("appDatas", datas) ;
+		results.put("sheetNames", sheetResult) ;
+		results.put("isBigData", false) ;
+		results.put("pageSize", 0) ;
+		results.put("oldWorkbook", workbook) ;
+
+		return createVirtualRowExcelData(results, excelType, clazzs) ;
 	}
 
     /**
