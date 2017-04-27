@@ -6,18 +6,17 @@ import cn.itcast.common.excel.annotation.ExcelWarning;
 import cn.itcast.common.excel.constants.ExcelType;
 import cn.itcast.common.excel.model.CellColumnValue;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.ListUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.*;
 
 /**
@@ -329,8 +328,15 @@ public class ExcelUtils {
 		
 		Iterator<Sheet> it = null ;
 		if(excelType.equals(ExcelType.XLS)) {
-			POIFSFileSystem fs = new POIFSFileSystem(new FileInputStream(filePath));
-			it = excelManager.getHSSFWorkbook(fs).sheetIterator();
+			POIFSFileSystem fs = null ;
+			try {
+				fs = new POIFSFileSystem(new FileInputStream(filePath));
+				it = excelManager.getHSSFWorkbook(fs).sheetIterator();
+			} finally {
+				if (fs != null) {
+					fs.close();
+				}
+			}
 		} else {
 			it = excelManager.getXSSFWorkbook(filePath).sheetIterator() ;
 		}
@@ -360,16 +366,29 @@ public class ExcelUtils {
 		ExcelManager excelManager = ExcelManager.createExcelManager() ;
 		List<Object> list = new ArrayList<Object>() ;
 		
-		Iterator<Sheet> it = null ;
-		if(excelType.equals(ExcelType.XLS)) {
-			POIFSFileSystem fs = new POIFSFileSystem(in);
-			it = excelManager.getHSSFWorkbook(fs).sheetIterator();
-		} else {
-			it = excelManager.getXSSFWorkbook(in).sheetIterator() ;
-		}
-		
-		while(it.hasNext()) {
-			list.addAll(excelManager.importExcelData(clazz, it.next())) ;
+		try {
+			Iterator<Sheet> it = null ;
+			if(excelType.equals(ExcelType.XLS)) {
+				POIFSFileSystem fs = null ;
+				try {
+					fs = new POIFSFileSystem(in);
+					it = excelManager.getHSSFWorkbook(fs).sheetIterator();
+				}finally {
+					if(fs != null) {
+						fs.close();
+					}
+				}
+			} else {
+				it = excelManager.getXSSFWorkbook(in).sheetIterator() ;
+			}
+
+			while(it.hasNext()) {
+				list.addAll(excelManager.importExcelData(clazz, it.next())) ;
+			}
+		}finally {
+			if(in != null) {
+				in.close();
+			}
 		}
 		return list ;
 	}
@@ -397,29 +416,42 @@ public class ExcelUtils {
 			throw new RuntimeException("请指定页签Sheet名称...") ;
 		}
 		
-		Workbook workbook = null ;
-		if(excelType.equals(ExcelType.XLS)) {
-			POIFSFileSystem fs = new POIFSFileSystem(in);
-			workbook = excelManager.getHSSFWorkbook(fs);
-		} else {
-			workbook = excelManager.getXSSFWorkbook(in);
-		}
-		
-		for(String name : sheetNames) {
-			if(workbook.getSheet(name) == null) {
-				throw new RuntimeException("Sheet页签指定的名称不存在......") ;
+		try {
+			Workbook workbook = null ;
+			if(excelType.equals(ExcelType.XLS)) {
+				POIFSFileSystem fs = null ;
+				try{
+					fs = new POIFSFileSystem(in);
+					workbook = excelManager.getHSSFWorkbook(fs);
+				} finally {
+					if(fs != null) {
+						fs.close();
+					}
+				}
+			} else {
+				workbook = excelManager.getXSSFWorkbook(in);
 			}
-			continue ;
+
+			for(String name : sheetNames) {
+				if(workbook.getSheet(name) == null) {
+					throw new RuntimeException("Sheet页签指定的名称不存在......") ;
+				}
+				continue ;
+			}
+
+			Sheet[] sheets = new Sheet[sheetNames.length] ;
+			int i = 0;
+			for(String sheetName : sheetNames) {
+				sheets[i] = workbook.getSheet(sheetName) ;
+				i++ ;
+			}
+			return excelManager.importExcelData(clazz, sheets);
+		} finally {
+			if(in != null) {
+				in.close();
+			}
 		}
-		
-		Sheet[] sheets = new Sheet[sheetNames.length] ;
-		int i = 0; 
-		for(String sheetName : sheetNames) {
-			sheets[i] = workbook.getSheet(sheetName) ;
-			i++ ;
-		}
-		
-		return excelManager.importExcelData(clazz, sheets);
+
 	}
 	
 	/**
@@ -447,30 +479,42 @@ public class ExcelUtils {
 			throw new RuntimeException("请指定页签Sheet索引...") ;
 		}
 		
-		Workbook workbook = null ;
-		if(excelType.equals(ExcelType.XLS)) {
-			POIFSFileSystem fs = new POIFSFileSystem(in);
-			workbook = excelManager.getHSSFWorkbook(fs);
-		} else {
-			workbook = excelManager.getXSSFWorkbook(in);
-		} 
-		
-		int sheetNum = workbook.getNumberOfSheets() ;
-		for(int index : sheetIndexes) {
-			if((index+1) > sheetNum) {
-				throw new RuntimeException("Sheet页签下标越界......") ;
+		try {
+			Workbook workbook = null ;
+			if(excelType.equals(ExcelType.XLS)) {
+				POIFSFileSystem fs = null ;
+				try {
+					fs = new POIFSFileSystem(in);
+					workbook = excelManager.getHSSFWorkbook(fs);
+				}finally {
+					if (fs != null) {
+						fs.close();
+					}
+				}
+			} else {
+				workbook = excelManager.getXSSFWorkbook(in);
 			}
-			continue ;
+
+			int sheetNum = workbook.getNumberOfSheets() ;
+			for(int index : sheetIndexes) {
+				if((index+1) > sheetNum) {
+					throw new RuntimeException("Sheet页签下标越界......") ;
+				}
+				continue ;
+			}
+
+			Sheet[] sheets = new Sheet[sheetIndexes.length] ;
+			int i = 0;
+			for(int sheetIndex : sheetIndexes) {
+				sheets[i] = workbook.getSheetAt(sheetIndex) ;
+				i++ ;
+			}
+			return excelManager.importExcelData(clazz, sheets);
+		}finally {
+			if(in != null) {
+				in.close();
+			}
 		}
-		
-		Sheet[] sheets = new Sheet[sheetIndexes.length] ;
-		int i = 0; 
-		for(int sheetIndex : sheetIndexes) {
-			sheets[i] = workbook.getSheetAt(sheetIndex) ;
-			i++ ;
-		}
-		
-		return excelManager.importExcelData(clazz, sheets);
 	}
 	
 	// ================================ Excel错误模板导出工具
