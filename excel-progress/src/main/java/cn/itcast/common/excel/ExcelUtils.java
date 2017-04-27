@@ -5,9 +5,11 @@ import cn.itcast.common.excel.annotation.ExcelHeader;
 import cn.itcast.common.excel.annotation.ExcelWarning;
 import cn.itcast.common.excel.constants.ExcelType;
 import cn.itcast.common.excel.model.CellColumnValue;
+import cn.itcast.common.excel.model.SheetDataBean;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -685,5 +687,57 @@ public class ExcelUtils {
 		}else {
 			return exportVirtualRowExcelDataData(null ,datas, clazzs, excelType, sheetNames) ;
 		}
+	}
+
+	/**
+	 * 导出excel附带多个sheet每个sheet都是不同的数据类型
+	 * @param sheetParams 每个sheet的参数和数据都封装在这里
+	 * @param excelType
+	 * @return
+	 */
+	public static final Workbook exportExcelDataWithMultipleSheet(List<SheetDataBean> sheetParams, ExcelType excelType) {
+		Workbook workbook = null;
+		for(SheetDataBean SheetDataBean : sheetParams) {
+			Class clazz = SheetDataBean.getClazz();
+			Map<String, Object> results = excelDataResultMap(clazz) ;
+
+			// 大批量数据条件下的分割Sheet
+			String[] sheetResult = null ;
+			String defaultSheetName = StringUtils.isNotBlank(SheetDataBean.getSheetNames()) ? SheetDataBean.getSheetNames() : ExcelManager.DEFAULT_SHEET_NAME;
+			if(SheetDataBean.isBigData()) {
+				int size = SheetDataBean.getAppDatas().size() ;
+				int sheetNums = size % SheetDataBean.getPageSize() == 0 ? size / SheetDataBean.getPageSize() : (size / SheetDataBean.getPageSize() +1) ;
+				sheetResult = new String[sheetNums] ;
+				if(sheetNums > 1) {
+					for(int i = 0; i< sheetNums; i++) {
+						sheetResult[i] = defaultSheetName + (i+1) ;
+					}
+				}else{
+					sheetResult =  new String[]{defaultSheetName+1};
+				}
+			} else {
+				if (StringUtils.isNotBlank(SheetDataBean.getSheetNames())) {
+					sheetResult = new String[]{defaultSheetName+1};
+				} else {
+					sheetResult = new String[]{defaultSheetName+1} ;
+				}
+			}
+
+			results.put("appDatas", SheetDataBean.getAppDatas()) ;
+			results.put("sheetNames", sheetResult) ;
+			results.put("isBigData", SheetDataBean.isBigData()) ;
+			results.put("pageSize", SheetDataBean.getPageSize()) ;
+			results.put("clazz", clazz) ;
+			results.put("oldWorkbook", workbook) ;
+
+			if(ExcelType.XLS.equals(excelType)) {
+				workbook = ExcelManager.createExcelManager().exportContainDataExcel_XLS(results, clazz) ;
+			}else if(ExcelType.XLSX.equals(excelType)) {
+				workbook = ExcelManager.createExcelManager().exportContainDataExcel_XLSX(results, clazz) ;
+			}else {
+				workbook = ExcelManager.createExcelManager().exportContainDataExcel_SXLSX(results, clazz) ;
+			}
+		}
+		return workbook;
 	}
 }
