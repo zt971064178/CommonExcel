@@ -625,4 +625,21 @@ public class ExcelUtils {
 			return exportExcelData(appDatas, clazz, excelType, sheetNames) ;
 		}
 	}
+
+	/**
+	 * 扩展导出功能 增强在原有Excel基础上重写
+	 * @param oldWorkbook
+	 * @param appDatas
+	 * @param clazz
+	 * @param excelType
+	 * @param sheetNames
+	 * @return
+	 */
+	public static final Workbook exportExcelVirtualRowDataToOldWorkbook(Workbook oldWorkbook, List<Map<Object,List<Object>>> datas, Map<String, Class<?>> clazzs, ExcelType excelType, String sheetNames){
+		if(oldWorkbook != null) {
+			return exportVirtualRowExcelDataData(oldWorkbook ,datas, clazzs, excelType, sheetNames) ;
+		}else {
+			return exportVirtualRowExcelDataData(null ,datas, clazzs, excelType, sheetNames) ;
+		}
+	}
 }

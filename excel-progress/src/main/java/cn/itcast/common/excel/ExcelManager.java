@@ -22,16 +22,7 @@ import org.apache.poi.hssf.usermodel.HSSFRichTextString;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.Comment;
-import org.apache.poi.ss.usermodel.DataFormat;
-import org.apache.poi.ss.usermodel.Drawing;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.RichTextString;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
@@ -136,18 +127,18 @@ public class ExcelManager {
 		headerStyle = workbook.createCellStyle();
 
 		// === 设置边框
-		headerStyle.setBorderBottom(CellStyle.BORDER_THIN);
-		headerStyle.setBorderLeft(CellStyle.BORDER_THIN);
-		headerStyle.setBorderRight(CellStyle.BORDER_THIN);
-		headerStyle.setBorderTop(CellStyle.BORDER_THIN);
+		headerStyle.setBorderBottom(BorderStyle.THIN);
+		headerStyle.setBorderLeft(BorderStyle.THIN);
+		headerStyle.setBorderRight(BorderStyle.THIN);
+		headerStyle.setBorderTop(BorderStyle.THIN);
 
 		// === 设置背景色
-		headerStyle.setFillForegroundColor(HSSFColor.LIGHT_GREEN.index);
-		headerStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+		headerStyle.setFillForegroundColor(HSSFColor.HSSFColorPredefined.LIGHT_GREEN.getIndex());
+		headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
 		// === 设置居中
-		headerStyle.setAlignment(CellStyle.ALIGN_CENTER);
-		headerStyle.setVerticalAlignment(CellStyle.VERTICAL_CENTER);
+		headerStyle.setAlignment(HorizontalAlignment.CENTER);
+		headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
 		// === 设置字体
 		Font font = workbook.createFont();
@@ -157,7 +148,7 @@ public class ExcelManager {
 		font.setFontHeightInPoints((short) 16);
 
 		// === 设置粗体显示
-		font.setBoldweight(Font.BOLDWEIGHT_BOLD);
+		font.setBold(true);
 
 		// === 选择需要用到的字体格式
 		headerStyle.setFont(font);
@@ -173,17 +164,17 @@ public class ExcelManager {
 		warnerStyle = workbook.createCellStyle();
 
 		// === 设置边框
-		warnerStyle.setBorderBottom(CellStyle.BORDER_THIN);
-		warnerStyle.setBorderLeft(CellStyle.BORDER_THIN);
-		warnerStyle.setBorderRight(CellStyle.BORDER_THIN);
-		warnerStyle.setBorderTop(CellStyle.BORDER_THIN);
+		warnerStyle.setBorderBottom(BorderStyle.THIN);
+		warnerStyle.setBorderLeft(BorderStyle.THIN);
+		warnerStyle.setBorderRight(BorderStyle.THIN);
+		warnerStyle.setBorderTop(BorderStyle.THIN);
 
 		// === 设置背景色
-		warnerStyle.setFillForegroundColor(HSSFColor.LIGHT_GREEN.index);
-		warnerStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+		warnerStyle.setFillForegroundColor(HSSFColor.HSSFColorPredefined.LIGHT_GREEN.getIndex());
+		warnerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
 		// === 设置左对齐
-		warnerStyle.setAlignment(CellStyle.ALIGN_LEFT);
+		warnerStyle.setAlignment(HorizontalAlignment.LEFT);
 
 		// === 设置字体
 		Font font = workbook.createFont();
@@ -193,10 +184,10 @@ public class ExcelManager {
 		font.setFontHeightInPoints((short) 10);
 
 		// === 设置粗体显示
-		font.setBoldweight(Font.BOLDWEIGHT_BOLD);
+		font.setBold(true);
 
 		// === 设置字体颜色
-		font.setColor(HSSFColor.RED.index);
+		font.setColor(HSSFColor.HSSFColorPredefined.RED.getIndex());
 
 		// === 选择需要用到的字体格式
 		warnerStyle.setFont(font);
@@ -211,18 +202,18 @@ public class ExcelManager {
 	private void setTitleCellStyles(Workbook workbook) {
 		titleStyle = workbook.createCellStyle();
 		// === 设置边框
-		titleStyle.setBorderBottom(CellStyle.BORDER_THIN);
-		titleStyle.setBorderLeft(CellStyle.BORDER_THIN);
-		titleStyle.setBorderRight(CellStyle.BORDER_THIN);
-		titleStyle.setBorderTop(CellStyle.BORDER_THIN);
+		titleStyle.setBorderBottom(BorderStyle.THIN);
+		titleStyle.setBorderLeft(BorderStyle.THIN);
+		titleStyle.setBorderRight(BorderStyle.THIN);
+		titleStyle.setBorderTop(BorderStyle.THIN);
 
 		// === 设置背景色
-		titleStyle.setFillForegroundColor(HSSFColor.LIGHT_GREEN.index);
-		titleStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+		titleStyle.setFillForegroundColor(HSSFColor.HSSFColorPredefined.LIGHT_GREEN.getIndex());
+		titleStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
 		// === 设置居中
-		titleStyle.setAlignment(CellStyle.ALIGN_CENTER);
-		titleStyle.setVerticalAlignment(CellStyle.VERTICAL_CENTER);
+		titleStyle.setAlignment(HorizontalAlignment.CENTER);
+		titleStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
 		// === 设置字体
 		Font font = workbook.createFont();
@@ -232,7 +223,7 @@ public class ExcelManager {
 		font.setFontHeightInPoints((short) 12);
 
 		// === 设置粗体显示
-		font.setBoldweight(Font.BOLDWEIGHT_BOLD);
+		font.setBold(true);
 
 		// === 选择需要用到的字体格式
 		titleStyle.setFont(font);
@@ -249,17 +240,18 @@ public class ExcelManager {
 		// === 设置单元格格式为文本格式
 		DataFormat dataFormat = workbook.createDataFormat();
 		dataStyle.setDataFormat(dataFormat.getFormat("@"));
-		dataStyle.setBorderBottom(CellStyle.BORDER_THIN);
-		dataStyle.setBorderLeft(CellStyle.BORDER_THIN);
-		dataStyle.setBorderRight(CellStyle.BORDER_THIN);
-		dataStyle.setBorderTop(CellStyle.BORDER_THIN);
+		dataStyle.setBorderBottom(BorderStyle.THIN);
+		dataStyle.setBorderLeft(BorderStyle.THIN);
+		dataStyle.setBorderRight(BorderStyle.THIN);
+		dataStyle.setBorderTop(BorderStyle.THIN);
 
 		// === 设置背景色
-		dataStyle.setFillForegroundColor(HSSFColor.LIGHT_GREEN.index);
-		dataStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+		dataStyle.setFillForegroundColor(HSSFColor.HSSFColorPredefined.LIGHT_GREEN.getIndex());
+		dataStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
 		// === 设置居中
-		dataStyle.setAlignment(CellStyle.ALIGN_LEFT);
+		dataStyle.setAlignment(HorizontalAlignment.CENTER);
+		dataStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
 		// === 设置字体
 		Font font = workbook.createFont();
@@ -281,23 +273,24 @@ public class ExcelManager {
 	private void setErrorDataStyle(Workbook workbook) {
 		errorDataStyle = workbook.createCellStyle();
 		// === 设置边框颜色
-		errorDataStyle.setBottomBorderColor(HSSFColor.RED.index);
-		errorDataStyle.setLeftBorderColor(HSSFColor.RED.index);
-		errorDataStyle.setRightBorderColor(HSSFColor.RED.index);
-		errorDataStyle.setTopBorderColor(HSSFColor.RED.index);
+		errorDataStyle.setBottomBorderColor(HSSFColor.HSSFColorPredefined.RED.getIndex());
+		errorDataStyle.setLeftBorderColor(HSSFColor.HSSFColorPredefined.RED.getIndex());
+		errorDataStyle.setRightBorderColor(HSSFColor.HSSFColorPredefined.RED.getIndex());
+		errorDataStyle.setTopBorderColor(HSSFColor.HSSFColorPredefined.RED.getIndex());
 
 		// === 设置边框
-		errorDataStyle.setBorderBottom(CellStyle.BORDER_THIN);
-		errorDataStyle.setBorderLeft(CellStyle.BORDER_THIN);
-		errorDataStyle.setBorderRight(CellStyle.BORDER_THIN);
-		errorDataStyle.setBorderTop(CellStyle.BORDER_THIN);
+		errorDataStyle.setBorderBottom(BorderStyle.THIN);
+		errorDataStyle.setBorderLeft(BorderStyle.THIN);
+		errorDataStyle.setBorderRight(BorderStyle.THIN);
+		errorDataStyle.setBorderTop(BorderStyle.THIN);
 
 		// === 设置背景色
-		errorDataStyle.setFillForegroundColor(HSSFColor.ROSE.index);
-		errorDataStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+		errorDataStyle.setFillForegroundColor(HSSFColor.HSSFColorPredefined.ROSE.getIndex());
+		errorDataStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
 		// === 设置居中
-		errorDataStyle.setAlignment(CellStyle.ALIGN_LEFT);
+		errorDataStyle.setAlignment(HorizontalAlignment.LEFT);
+		errorDataStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
 		// === 设置字体
 		Font font = workbook.createFont();
@@ -1329,57 +1322,57 @@ public class ExcelManager {
 						// 文本，数值或日期类型的条件判断 开始 =============================
 						if (dataCell != null) {
 							Object value = "";
-							switch (dataCell.getCellType()) {
-							case HSSFCell.CELL_TYPE_NUMERIC:
-								if (HSSFDateUtil.isCellDateFormatted(dataCell)) {
-									// === 如果是date类型则 ，获取该cell的date值
-									// value =
-									// HSSFDateUtil.getJavaDate(dataCell.getNumericCellValue()).toString();
-									Date date = dataCell.getDateCellValue();
-									// SimpleDateFormat sdf = new
-									// SimpleDateFormat("yyyy-MM-dd") ;
-									// value = sdf.format(date) ;
-									value = date;
-								} else {// === 纯数字
-									dataCell.setCellType(Cell.CELL_TYPE_STRING);
-									value = String.valueOf(dataCell.getRichStringCellValue().toString());
-								}
-								break;
+							switch (dataCell.getCellTypeEnum()) {
+								case NUMERIC:
+									if (HSSFDateUtil.isCellDateFormatted(dataCell)) {
+										// === 如果是date类型则 ，获取该cell的date值
+										// value =
+										// HSSFDateUtil.getJavaDate(dataCell.getNumericCellValue()).toString();
+										Date date = dataCell.getDateCellValue();
+										// SimpleDateFormat sdf = new
+										// SimpleDateFormat("yyyy-MM-dd") ;
+										// value = sdf.format(date) ;
+										value = date;
+									} else {// === 纯数字
+										dataCell.setCellType(CellType.STRING);
+										value = String.valueOf(dataCell.getRichStringCellValue().toString());
+									}
+									break;
 
-							case HSSFCell.CELL_TYPE_STRING:
-								value = dataCell.getRichStringCellValue().toString();
-								if("#N/A".equals(value)) {
-									value = "" ;
-								}
-								
-								break;
-
-							case HSSFCell.CELL_TYPE_FORMULA:
-								// === 读公式计算值
-								value = String.valueOf(dataCell.getNumericCellValue());
-								// === 如果获取的数据值为非法值,则转换为获取字符串
-								if ("NaN".equals(value)) {
+								case STRING:
 									value = dataCell.getRichStringCellValue().toString();
-								}
+									if("#N/A".equals(value)) {
+										value = "" ;
+									}
 
-								// cell.getCellFormula() ;//读公式
-								break;
+									break;
 
-							case HSSFCell.CELL_TYPE_BOOLEAN:
-								value = dataCell.getBooleanCellValue();
-								break;
+								case FORMULA:
+									// === 读公式计算值
+									value = String.valueOf(dataCell.getNumericCellValue());
+									// === 如果获取的数据值为非法值,则转换为获取字符串
+									if ("NaN".equals(value)) {
+										value = dataCell.getRichStringCellValue().toString();
+									}
 
-							case HSSFCell.CELL_TYPE_BLANK:
-								value = "";
-								break;
+									// cell.getCellFormula() ;//读公式
+									break;
 
-							case HSSFCell.CELL_TYPE_ERROR:
-								value = "";
-								break;
+								case BOOLEAN:
+									value = dataCell.getBooleanCellValue();
+									break;
 
-							default:
-								value = dataCell.getRichStringCellValue().toString();
-								break;
+								case BLANK:
+									value = "";
+									break;
+
+								case ERROR:
+									value = "";
+									break;
+
+								default:
+									value = dataCell.getRichStringCellValue().toString();
+									break;
 							}
 							sb.append(value);
 
