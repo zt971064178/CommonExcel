@@ -128,11 +128,13 @@ public class ExcelUtils {
             int size = appDatas.size() ;
             int sheetNums = size % pageSize == 0 ? size / pageSize : (size / pageSize +1) ;
             sheetResult = new String[sheetNums] ;
-            if(sheetNums > 1) {
+            if(sheetNums >= 1) {
                 for(int i = 0; i< sheetNums; i++) {
                     sheetResult[i] = ExcelManager.DEFAULT_SHEET_NAME + (i+1) ;
                 }
-            }
+            }else {
+				sheetResult = new String[]{ExcelManager.DEFAULT_SHEET_NAME+1} ;
+			}
         } else {
             if(!"".equals(sheetNames) && null != sheetNames) {
                 sheetResult = new String[] {sheetNames} ;
