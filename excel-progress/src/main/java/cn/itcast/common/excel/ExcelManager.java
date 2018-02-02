@@ -1,25 +1,14 @@
 package cn.itcast.common.excel;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import cn.itcast.common.excel.annotation.ExcelColumn;
+import cn.itcast.common.excel.constants.CommentType;
 import cn.itcast.common.excel.constants.ExcelType;
-import com.sun.org.apache.xerces.internal.xs.datatypes.ObjectList;
+import cn.itcast.common.excel.model.CellColumnValue;
+import cn.itcast.common.excel.model.ValueBean;
+import cn.itcast.common.excel.utils.StringUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.poi.hssf.usermodel.HSSFCell;
-import org.apache.poi.hssf.usermodel.HSSFClientAnchor;
-import org.apache.poi.hssf.usermodel.HSSFDateUtil;
-import org.apache.poi.hssf.usermodel.HSSFRichTextString;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.*;
@@ -29,11 +18,11 @@ import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import cn.itcast.common.excel.annotation.ExcelColumn;
-import cn.itcast.common.excel.constants.CommentType;
-import cn.itcast.common.excel.model.CellColumnValue;
-import cn.itcast.common.excel.model.ValueBean;
-import cn.itcast.common.excel.utils.StringUtils;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Type;
+import java.util.*;
 
 /**
  * 
@@ -253,6 +242,9 @@ public class ExcelManager {
 		dataStyle.setAlignment(HorizontalAlignment.CENTER);
 		dataStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
+		// Poi导出excel设置单元格数值格式
+		// dataStyle.setDataFormat(HSSFDataFormat.getBuiltinFormat("0"));
+		// dataStyle.setDataFormat(HSSFDataFormat.getBuiltinFormat("0.00"));
 		// === 设置字体
 		Font font = workbook.createFont();
 		font.setFontName("宋体");
