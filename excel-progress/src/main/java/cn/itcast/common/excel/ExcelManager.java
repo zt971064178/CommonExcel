@@ -245,6 +245,8 @@ public class ExcelManager {
 		// Poi导出excel设置单元格数值格式
 		// dataStyle.setDataFormat(HSSFDataFormat.getBuiltinFormat("0"));
 		// dataStyle.setDataFormat(HSSFDataFormat.getBuiltinFormat("0.00"));
+		// 注意setCellValue的值必须是Doubele类型
+		// dataCell.setCellValue(new Double(resultList.get(m).getZzBPercent().toString()));
 		// === 设置字体
 		Font font = workbook.createFont();
 		font.setFontName("宋体");
